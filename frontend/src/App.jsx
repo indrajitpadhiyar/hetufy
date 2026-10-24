@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Background from './components/Background';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import MusicGrid from './components/MusicGrid';
@@ -10,7 +9,8 @@ import MusicPlayer from './components/MusicPlayer';
 import Toast from './components/Toast';
 import PlaylistModal from './components/PlaylistModal';
 import AddToPlaylistModal from './components/AddToPlaylistModal';
-import { songs, genres, loadSongs } from './data/songs';
+import SettingsModal from './components/SettingsModal';
+import { songs, genres } from './data/songs';
 import { getSongsFromAPI, recordSongPlay, recordSongDownload, toggleLikeInBackend, seedBackendSongs } from './services/api';
 
 const DEFAULT_PLAYLISTS = [
@@ -25,6 +25,22 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [favorites, setFavorites] = useState([1]);
   const [toast, setToast] = useState(null);
+  const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
+
+  // Theme State with LocalStorage Persistence
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('hetufy_theme') || 'light';
+  });
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('hetufy_theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   // Playlist State & LocalStorage Persistence
   const [playlists, setPlaylists] = useState(() => {
@@ -136,6 +152,7 @@ export default function App() {
   const handlePlaySong = (song) => {
     setCurrentSong(song);
     setIsPlaying(true);
+    setIsFullPlayerOpen(true);
     recordSongPlay(song.id);
   };
 
@@ -221,19 +238,21 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen text-[#1c1b18] bg-[#d3cac0] p-3 sm:p-5 md:p-8 font-sans pb-28">
-      {/* Background Frame Layer */}
-      <Background />
-
-      {/* Main Editorial Canvas Frame */}
-      <div className="relative z-10 editorial-canvas min-h-screen">
-        {/* Top Header Navbar */}
+    <div
+      className={`relative min-h-screen font-sans transition-colors duration-500 ${
+        theme === 'dark' ? 'bg-[#15161c] text-white' : 'bg-[#f6f3eb] text-[#1c1b18]'
+      }`}
+    >
+      {/* Top Header Navbar */}
         <Navbar 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
           onOpenPlaylists={() => setIsPlaylistModalOpen(true)}
+          theme={theme}
+          setTheme={setTheme}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
         />
 
         {/* Main Content Area */}
@@ -249,6 +268,7 @@ export default function App() {
             songList={songList}
             onPlaySong={handlePlaySong}
             onOpenAddToPlaylist={(song) => setSongForAddToPlaylist(song)}
+            theme={theme}
           />
 
           <MusicGrid 
@@ -267,28 +287,35 @@ export default function App() {
             onToggleFavorite={handleToggleFavorite}
             playlists={playlists}
             onOpenAddToPlaylist={(song) => setSongForAddToPlaylist(song)}
+            theme={theme}
           />
 
-          <FeaturesSection />
+          <FeaturesSection theme={theme} />
 
-          <CTASection onExploreClick={handleExploreClick} />
+          <CTASection onExploreClick={handleExploreClick} theme={theme} />
         </main>
 
         {/* Footer */}
-        <Footer />
-      </div>
+        <Footer theme={theme} />
 
-      {/* Persistent Bottom Audio Player */}
+      {/* Persistent Bottom Audio Player & Full Page View */}
       {currentSong && (
         <MusicPlayer 
           currentSong={currentSong}
+          songList={songList}
           isPlaying={isPlaying}
           setIsPlaying={setIsPlaying}
           onNext={handleNext}
           onPrev={handlePrev}
+          onPlaySong={handlePlaySong}
           onDownload={handleDownload}
           isFavorite={favorites.includes(currentSong?.id)}
           onToggleFavorite={handleToggleFavorite}
+          isFullPlayerOpen={isFullPlayerOpen}
+          setIsFullPlayerOpen={setIsFullPlayerOpen}
+          theme={theme}
+          setTheme={setTheme}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
         />
       )}
 
@@ -307,6 +334,7 @@ export default function App() {
           const libraryEl = document.getElementById('library');
           if (libraryEl) libraryEl.scrollIntoView({ behavior: 'smooth' });
         }}
+        theme={theme}
       />
 
       {/* Add To Playlist Quick Modal */}
@@ -317,6 +345,15 @@ export default function App() {
         playlists={playlists}
         onAddToPlaylist={handleAddToPlaylist}
         onCreatePlaylist={handleCreatePlaylist}
+        theme={theme}
+      />
+
+      {/* Settings Modal (Light / Dark Theme selector) */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        theme={theme}
+        setTheme={setTheme}
       />
 
       {/* Toast Notification */}

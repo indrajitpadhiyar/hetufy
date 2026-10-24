@@ -8,13 +8,15 @@ export default function Hero({
   onTogglePlay, 
   onDownload, 
   isFavorite, 
-  onToggleFavorite,
+  onToggleFavorite, 
   songList = [],
   onPlaySong,
-  onOpenAddToPlaylist
+  onOpenAddToPlaylist,
+  theme = 'light'
 }) {
   const tracks = songList && songList.length > 0 ? songList.slice(0, 3) : [];
   const activeTrack = featuredSong || tracks[0];
+  const isDark = theme === 'dark';
 
   return (
     <section id="hero" className="py-8 md:py-14 px-6 md:px-12 max-w-[1400px] mx-auto">
@@ -25,7 +27,9 @@ export default function Hero({
           <div className="relative group max-w-sm sm:max-w-md w-full">
             
             {/* Background Tilted Film Strip 1 */}
-            <div className="absolute inset-0 bg-[#2b2723] rounded-2xl rotate-[-8deg] shadow-xl border border-[#3e3933] pointer-events-none opacity-80 transition-transform group-hover:rotate-[-10deg]">
+            <div className={`absolute inset-0 rounded-2xl rotate-[-8deg] shadow-xl pointer-events-none opacity-80 transition-transform group-hover:rotate-[-10deg] ${
+              isDark ? 'bg-[#181920] border border-zinc-700/60' : 'bg-[#2b2723] border border-[#3e3933]'
+            }`}>
               <div className="h-6 flex items-center justify-between px-3 border-b border-zinc-700/50">
                 <span className="text-[9px] font-mono text-zinc-400 tracking-widest uppercase">KODAK E100</span>
                 <div className="flex gap-1.5">
@@ -40,15 +44,21 @@ export default function Hero({
               initial={{ rotate: -3, y: 10 }}
               animate={{ rotate: -2, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="relative bg-[#eee9df] p-4 md:p-5 rounded-2xl shadow-2xl border border-[#d3cac0] rotate-[-2deg] hover:rotate-0 transition-transform duration-500"
+              className={`relative p-4 md:p-5 rounded-2xl shadow-2xl rotate-[-2deg] hover:rotate-0 transition-transform duration-500 ${
+                isDark 
+                  ? 'bg-[#1e1f28] border border-white/10 text-white shadow-[0_20px_50px_rgba(0,0,0,0.6)]' 
+                  : 'bg-[#eee9df] border border-[#d3cac0]'
+              }`}
             >
               {/* Top Film Sprocket Strip Header */}
-              <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-[#d6cfc4] text-[10px] font-mono text-[#7d776f] tracking-widest font-bold uppercase">
+              <div className={`flex items-center justify-between px-2 pb-2 mb-2 border-b text-[10px] font-mono tracking-widest font-bold uppercase ${
+                isDark ? 'border-white/10 text-zinc-400' : 'border-[#d6cfc4] text-[#7d776f]'
+              }`}>
                 <span>KODAK E100</span>
                 <div className="flex gap-2">
-                  <span className="w-2.5 h-2 rounded-xs bg-[#22211e]" />
-                  <span className="w-2.5 h-2 rounded-xs bg-[#22211e]" />
-                  <span className="w-2.5 h-2 rounded-xs bg-[#22211e]" />
+                  <span className={`w-2.5 h-2 rounded-xs ${isDark ? 'bg-zinc-800' : 'bg-[#22211e]'}`} />
+                  <span className={`w-2.5 h-2 rounded-xs ${isDark ? 'bg-zinc-800' : 'bg-[#22211e]'}`} />
+                  <span className={`w-2.5 h-2 rounded-xs ${isDark ? 'bg-zinc-800' : 'bg-[#22211e]'}`} />
                 </div>
               </div>
 
@@ -69,7 +79,9 @@ export default function Hero({
               </div>
 
               {/* Bottom Film Sprocket Strip Footer */}
-              <div className="flex items-center justify-between px-2 pt-3 text-[10px] font-mono text-[#7d776f] font-bold">
+              <div className={`flex items-center justify-between px-2 pt-3 text-[10px] font-mono font-bold ${
+                isDark ? 'text-zinc-500' : 'text-[#7d776f]'
+              }`}>
                 <span>15</span>
                 <span>15A</span>
                 <span>16</span>
@@ -87,14 +99,18 @@ export default function Hero({
             <motion.h1 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="text-5xl sm:text-7xl xl:text-8xl font-black text-[#1c1b18] tracking-tight leading-[0.9] font-sans-grotesk uppercase"
+              className={`text-5xl sm:text-7xl xl:text-8xl font-black tracking-tight leading-[0.9] font-sans-grotesk uppercase transition-colors duration-300 ${
+                isDark ? 'text-white drop-shadow-sm' : 'text-[#1c1b18]'
+              }`}
             >
               WRITTEN<br />
               TO BE SUNG
             </motion.h1>
 
             {/* Subtitle (Exact match: Composer / Arranger / Producer) */}
-            <p className="text-xs sm:text-sm font-semibold tracking-[0.25em] text-[#7d776f] uppercase mt-4">
+            <p className={`text-xs sm:text-sm font-semibold tracking-[0.25em] uppercase mt-4 transition-colors duration-300 ${
+              isDark ? 'text-zinc-400' : 'text-[#7d776f]'
+            }`}>
               Composer &nbsp;/&nbsp; Arranger &nbsp;/&nbsp; Producer
             </p>
           </div>
@@ -121,14 +137,20 @@ export default function Hero({
                   }}
                   className={`group flex items-center justify-between p-3 sm:p-4 rounded-xl cursor-pointer transition-all duration-300 ${
                     isCurrent 
-                      ? 'bg-[#eee9df] border border-[#d6cfc4] shadow-md' 
-                      : 'hover:bg-[#eee9df]/60 border border-transparent'
+                      ? (isDark 
+                          ? 'bg-[#222430] border border-amber-400/50 shadow-xl text-white ring-1 ring-amber-400/30' 
+                          : 'bg-[#eee9df] border border-[#d6cfc4] shadow-md text-[#1c1b18]')
+                      : (isDark 
+                          ? 'hover:bg-white/5 border border-transparent text-zinc-300' 
+                          : 'hover:bg-[#eee9df]/60 border border-transparent text-[#1c1b18]')
                   }`}
                 >
                   {/* Left: Track Index + Vinyl Disc + Title */}
                   <div className="flex items-center space-x-4 sm:space-x-6">
                     {/* Index (#1, #2) */}
-                    <span className="font-serif-editorial italic text-sm text-[#7d776f] font-medium w-4">
+                    <span className={`text-sm font-semibold w-4 ${
+                      isDark ? (isCurrent ? 'text-amber-400' : 'text-zinc-500') : 'text-[#7d776f]'
+                    }`}>
                       #{idx + 1}
                     </span>
 
@@ -159,10 +181,16 @@ export default function Hero({
 
                     {/* Song Titles */}
                     <div>
-                      <h3 className="font-serif-editorial text-lg sm:text-xl text-[#1c1b18] leading-tight font-medium group-hover:text-black">
+                      <h3 className={`font-serif-editorial text-lg sm:text-xl leading-tight font-medium ${
+                        isDark 
+                          ? (isCurrent ? 'text-white' : 'text-zinc-100 group-hover:text-amber-300') 
+                          : 'text-[#1c1b18] group-hover:text-black'
+                      }`}>
                         {song.title}
                       </h3>
-                      <p className="text-xs text-[#7d776f] font-normal mt-0.5">
+                      <p className={`text-xs font-normal mt-0.5 ${
+                        isDark ? 'text-zinc-400' : 'text-[#7d776f]'
+                      }`}>
                         {song.artist || `written for Tobe, sung by 40 voices`}
                       </p>
                     </div>
@@ -176,7 +204,11 @@ export default function Hero({
                           e.stopPropagation();
                           onOpenAddToPlaylist(song);
                         }}
-                        className="p-1.5 sm:p-2 rounded-full hover:bg-[#dcd5c9] text-[#7d776f] hover:text-[#1c1b18] transition-colors"
+                        className={`p-1.5 sm:p-2 rounded-full transition-colors ${
+                          isDark 
+                            ? 'hover:bg-white/10 text-zinc-400 hover:text-white' 
+                            : 'hover:bg-[#dcd5c9] text-[#7d776f] hover:text-[#1c1b18]'
+                        }`}
                         title="Add to Playlist"
                       >
                         <Plus className="w-4 h-4" />
@@ -188,13 +220,19 @@ export default function Hero({
                         e.stopPropagation();
                         onDownload(song);
                       }}
-                      className="p-1.5 sm:p-2 rounded-full hover:bg-[#dcd5c9] text-[#7d776f] hover:text-[#1c1b18] transition-colors"
+                      className={`p-1.5 sm:p-2 rounded-full transition-colors ${
+                        isDark 
+                          ? 'hover:bg-white/10 text-zinc-400 hover:text-white' 
+                          : 'hover:bg-[#dcd5c9] text-[#7d776f] hover:text-[#1c1b18]'
+                      }`}
                       title="Download MP3"
                     >
                       <Download className="w-4 h-4" />
                     </button>
 
-                    <span className="text-xs font-mono text-[#5e584f] font-medium min-w-[35px] text-right">
+                    <span className={`text-xs font-mono font-medium min-w-[35px] text-right ${
+                      isDark ? 'text-zinc-400' : 'text-[#5e584f]'
+                    }`}>
                       {durationMin}:{durationSec}
                     </span>
                   </div>

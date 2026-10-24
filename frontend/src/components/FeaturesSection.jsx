@@ -2,7 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Radio, Compass, DownloadCloud, Sparkles } from 'lucide-react';
 
-export default function FeaturesSection() {
+export default function FeaturesSection({ theme = 'light' }) {
+  const isDark = theme === 'dark';
+
   const features = [
     {
       icon: Radio,
@@ -32,10 +34,14 @@ export default function FeaturesSection() {
         
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto mb-10">
-          <p className="text-xs font-semibold tracking-[0.2em] text-[#7d776f] uppercase mb-2">
+          <p className={`text-xs font-semibold tracking-[0.2em] uppercase mb-2 ${
+            isDark ? 'text-zinc-400' : 'text-[#7d776f]'
+          }`}>
             Studio Standards
           </p>
-          <h2 className="font-serif-editorial text-3xl sm:text-4xl text-[#1c1b18] font-normal tracking-tight">
+          <h2 className={`font-serif-editorial text-3xl sm:text-4xl font-normal tracking-tight ${
+            isDark ? 'text-white' : 'text-[#1c1b18]'
+          }`}>
             Crafted for Listening
           </h2>
         </div>
@@ -51,18 +57,28 @@ export default function FeaturesSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: idx * 0.1 }}
-                className="editorial-card p-6 border border-[#d6cfc4] bg-[#eee9df] hover:bg-[#e4ded4]"
+                className={`editorial-card p-6 rounded-2xl transition-all duration-300 ${
+                  isDark 
+                    ? 'bg-[#1a1b24] border border-white/5 hover:border-white/20 hover:bg-[#20222e] text-white shadow-md' 
+                    : 'border border-[#d6cfc4] bg-[#eee9df] hover:bg-[#e4ded4]'
+                }`}
               >
                 {/* Icon Container */}
-                <div className="w-10 h-10 rounded-full bg-[#1c1b18] text-[#f6f3eb] flex items-center justify-center mb-4 shadow-sm">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-4 shadow-sm ${
+                  isDark ? 'bg-amber-400 text-black' : 'bg-[#1c1b18] text-[#f6f3eb]'
+                }`}>
                   <Icon className="w-4 h-4" />
                 </div>
 
                 {/* Content */}
-                <h3 className="font-serif-editorial text-lg text-[#1c1b18] mb-2 font-medium">
+                <h3 className={`font-serif-editorial text-lg mb-2 font-medium ${
+                  isDark ? 'text-white' : 'text-[#1c1b18]'
+                }`}>
                   {item.title}
                 </h3>
-                <p className="text-xs text-[#7d776f] leading-relaxed font-normal">
+                <p className={`text-xs leading-relaxed font-normal ${
+                  isDark ? 'text-zinc-400' : 'text-[#7d776f]'
+                }`}>
                   {item.desc}
                 </p>
               </motion.div>

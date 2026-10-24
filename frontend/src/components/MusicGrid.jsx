@@ -20,8 +20,11 @@ export default function MusicGrid({
   favorites,
   onToggleFavorite,
   playlists = [],
-  onOpenAddToPlaylist
+  onOpenAddToPlaylist,
+  theme = 'light'
 }) {
+  const isDark = theme === 'dark';
+
   // Filter songs based on search query, category, or active custom playlist
   const filteredSongs = songs.filter((song) => {
     let matchesCategory = false;
@@ -50,10 +53,14 @@ export default function MusicGrid({
         
         {/* Section Title */}
         <div className="text-center max-w-2xl mx-auto mb-8">
-          <h2 className="font-serif-editorial text-3xl sm:text-4xl text-[#1c1b18] tracking-tight mb-2 font-normal">
+          <h2 className={`font-serif-editorial text-3xl sm:text-4xl tracking-tight mb-2 font-normal transition-colors duration-300 ${
+            isDark ? 'text-white' : 'text-[#1c1b18]'
+          }`}>
             Music Archive
           </h2>
-          <p className="text-xs sm:text-sm text-[#7d776f] font-normal">
+          <p className={`text-xs sm:text-sm font-normal transition-colors duration-300 ${
+            isDark ? 'text-zinc-400' : 'text-[#7d776f]'
+          }`}>
             {activeCategory.startsWith('Playlist: ') 
               ? `Showing tracks in ${activeCategory}`
               : 'Explore recordings, stream high-definition audio, and download original tracks.'}
@@ -65,6 +72,7 @@ export default function MusicGrid({
           searchQuery={searchQuery} 
           setSearchQuery={setSearchQuery} 
           resultCount={filteredSongs.length}
+          theme={theme}
         />
 
         {/* Category Pills */}
@@ -73,6 +81,7 @@ export default function MusicGrid({
             categories={categories} 
             activeCategory={activeCategory} 
             onSelectCategory={onSelectCategory} 
+            theme={theme}
           />
         </div>
 
@@ -95,6 +104,7 @@ export default function MusicGrid({
                   isFavorite={favorites.includes(song.id)}
                   onToggleFavorite={onToggleFavorite}
                   onOpenAddToPlaylist={onOpenAddToPlaylist}
+                  theme={theme}
                 />
               ))}
             </AnimatePresence>
@@ -104,13 +114,17 @@ export default function MusicGrid({
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="editorial-card rounded-2xl p-12 text-center max-w-md mx-auto border border-[#d6cfc4]"
+            className={`editorial-card rounded-2xl p-12 text-center max-w-md mx-auto border ${
+              isDark ? 'bg-[#1a1b24] border-white/10 text-white' : 'border-[#d6cfc4]'
+            }`}
           >
-            <div className="w-14 h-14 rounded-full bg-[#eee9df] border border-[#d6cfc4] flex items-center justify-center mx-auto mb-4">
-              <SearchX className="w-6 h-6 text-[#7d776f]" />
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              isDark ? 'bg-white/10 text-zinc-400' : 'bg-[#eee9df] border border-[#d6cfc4] text-[#7d776f]'
+            }`}>
+              <SearchX className="w-6 h-6" />
             </div>
-            <h3 className="font-serif-editorial text-xl text-[#1c1b18] mb-2 font-medium">No compositions found</h3>
-            <p className="text-xs text-[#7d776f] mb-6 font-normal leading-relaxed">
+            <h3 className={`font-serif-editorial text-xl mb-2 font-medium ${isDark ? 'text-white' : 'text-[#1c1b18]'}`}>No compositions found</h3>
+            <p className={`text-xs mb-6 font-normal leading-relaxed ${isDark ? 'text-zinc-400' : 'text-[#7d776f]'}`}>
               We couldn't find any songs matching "{searchQuery}". Try adjusting your search keywords or resetting filters.
             </p>
             <button
@@ -118,7 +132,11 @@ export default function MusicGrid({
                 setSearchQuery('');
                 onSelectCategory('All');
               }}
-              className="px-6 py-2.5 rounded-full text-xs font-bold text-[#f6f3eb] bg-[#1c1b18] hover:bg-black transition-all cursor-pointer shadow-sm"
+              className={`px-6 py-2.5 rounded-full text-xs font-bold cursor-pointer transition-all shadow-sm ${
+                isDark 
+                  ? 'bg-amber-400 text-black hover:bg-amber-300' 
+                  : 'bg-[#1c1b18] text-[#f6f3eb] hover:bg-black'
+              }`}
             >
               Reset Archive Filters
             </button>
