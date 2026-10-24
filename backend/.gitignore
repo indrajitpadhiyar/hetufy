@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.local
+*.log
+song-*.json
+*-*.json
+*service_account*.json
+*credentials*.json
+service-account*.json
