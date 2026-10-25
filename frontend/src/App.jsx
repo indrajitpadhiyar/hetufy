@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import MusicGrid from './components/MusicGrid';
-import FeaturesSection from './components/FeaturesSection';
-import CTASection from './components/CTASection';
-import Footer from './components/Footer';
+import SpotifyTopBar from './components/SpotifyTopBar';
+import SpotifyLibrarySidebar from './components/SpotifyLibrarySidebar';
+import SpotifyMainView from './components/SpotifyMainView';
+import SpotifyNowPlayingSidebar from './components/SpotifyNowPlayingSidebar';
 import MusicPlayer from './components/MusicPlayer';
 import Toast from './components/Toast';
 import PlaylistModal from './components/PlaylistModal';
@@ -26,10 +24,11 @@ export default function App() {
   const [favorites, setFavorites] = useState([1]);
   const [toast, setToast] = useState(null);
   const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
 
-  // Theme State with LocalStorage Persistence
+  // Theme State with LocalStorage Persistence (Default to Dark Spotify Theme)
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('hetufy_theme') || 'light';
+    return localStorage.getItem('hetufy_theme') || 'dark';
   });
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
@@ -238,67 +237,84 @@ export default function App() {
   };
 
   return (
-    <div
-      className={`relative min-h-screen font-sans transition-colors duration-500 ${
-        theme === 'dark' ? 'bg-[#15161c] text-white' : 'bg-[#f6f3eb] text-[#1c1b18]'
-      }`}
-    >
-      {/* Top Header Navbar */}
-        <Navbar 
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+    <div className="h-screen w-screen bg-black text-white flex flex-col overflow-hidden font-sans select-none">
+      
+      {/* 1. Spotify Desktop Window Top Bar */}
+      <SpotifyTopBar 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onOpenPlaylists={() => setIsPlaylistModalOpen(true)}
+        onResetToHome={() => {
+          setActiveCategory('All');
+          setSearchQuery('');
+        }}
+      />
+
+      {/* 2. Main 3-Column Workspace (Library Left, Main Center, Now Playing Right) */}
+      <div className="flex-1 flex overflow-hidden p-2 gap-2 min-h-0 mb-[76px]">
+        
+        {/* Left Column: Your Library */}
+        <SpotifyLibrarySidebar 
+          playlists={playlists}
+          onCreatePlaylist={handleCreatePlaylist}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
-          onOpenPlaylists={() => setIsPlaylistModalOpen(true)}
-          theme={theme}
-          setTheme={setTheme}
-          onOpenSettings={() => setIsSettingsModalOpen(true)}
+          favoritesCount={favorites.length}
+          songs={songList}
+          onPlaySong={handlePlaySong}
         />
 
-        {/* Main Content Area */}
-        <main className="relative z-10 transition-all">
-          <Hero 
-            onStartListening={handleStartListening} 
-            featuredSong={currentSong || songList[0]}
-            isPlaying={isPlaying}
-            onTogglePlay={handleTogglePlay}
-            onDownload={handleDownload}
-            isFavorite={favorites.includes(currentSong?.id || songList[0]?.id)}
-            onToggleFavorite={handleToggleFavorite}
-            songList={songList}
-            onPlaySong={handlePlaySong}
-            onOpenAddToPlaylist={(song) => setSongForAddToPlaylist(song)}
-            theme={theme}
-          />
+        {/* Center Column: Main Content Area */}
+        <SpotifyMainView 
+          songs={songList.filter(s => {
+            let matchesCategory = false;
+            if (activeCategory.startsWith('Playlist: ')) {
+              const plName = activeCategory.replace('Playlist: ', '');
+              const targetPl = playlists.find(p => p.name === plName);
+              matchesCategory = targetPl ? targetPl.songIds.includes(s.id) : false;
+            } else if (activeCategory === 'Favorites') {
+              matchesCategory = favorites.includes(s.id);
+            } else if (activeCategory === 'Music' || activeCategory === 'All') {
+              matchesCategory = true;
+            } else {
+              matchesCategory = s.genre?.toLowerCase() === activeCategory.toLowerCase();
+            }
 
-          <MusicGrid 
-            songs={songList}
-            categories={genres}
-            activeCategory={activeCategory}
-            onSelectCategory={setActiveCategory}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
+            const query = searchQuery.toLowerCase().trim();
+            const matchesSearch = !query || 
+              s.title.toLowerCase().includes(query) ||
+              s.artist.toLowerCase().includes(query);
+
+            return matchesCategory && matchesSearch;
+          })}
+          currentSong={currentSong}
+          isPlaying={isPlaying}
+          onPlaySong={handlePlaySong}
+          onTogglePlay={handleTogglePlay}
+          onDownload={handleDownload}
+          favorites={favorites}
+          onToggleFavorite={handleToggleFavorite}
+          onOpenAddToPlaylist={(song) => setSongForAddToPlaylist(song)}
+          activeCategory={activeCategory}
+          onSelectCategory={setActiveCategory}
+          categories={genres}
+        />
+
+        {/* Right Column: Now Playing View (Toggleable) */}
+        {isRightSidebarOpen && currentSong && (
+          <SpotifyNowPlayingSidebar 
             currentSong={currentSong}
-            isPlaying={isPlaying}
-            onPlaySong={handlePlaySong}
-            onTogglePlay={handleTogglePlay}
-            onDownload={handleDownload}
-            favorites={favorites}
+            isFavorite={favorites.includes(currentSong.id)}
             onToggleFavorite={handleToggleFavorite}
-            playlists={playlists}
+            onClose={() => setIsRightSidebarOpen(false)}
             onOpenAddToPlaylist={(song) => setSongForAddToPlaylist(song)}
-            theme={theme}
           />
+        )}
 
-          <FeaturesSection theme={theme} />
+      </div>
 
-          <CTASection onExploreClick={handleExploreClick} theme={theme} />
-        </main>
-
-        {/* Footer */}
-        <Footer theme={theme} />
-
-      {/* Persistent Bottom Audio Player & Full Page View */}
+      {/* 3. Persistent Spotify Bottom Audio Player Bar & Full Page View */}
       {currentSong && (
         <MusicPlayer 
           currentSong={currentSong}
@@ -316,6 +332,7 @@ export default function App() {
           theme={theme}
           setTheme={setTheme}
           onOpenSettings={() => setIsSettingsModalOpen(true)}
+          onToggleRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
         />
       )}
 
@@ -331,8 +348,6 @@ export default function App() {
         onPlaySong={handlePlaySong}
         onSelectPlaylistFilter={(plCategoryName) => {
           setActiveCategory(plCategoryName);
-          const libraryEl = document.getElementById('library');
-          if (libraryEl) libraryEl.scrollIntoView({ behavior: 'smooth' });
         }}
         theme={theme}
       />
@@ -348,7 +363,7 @@ export default function App() {
         theme={theme}
       />
 
-      {/* Settings Modal (Light / Dark Theme selector) */}
+      {/* Settings Modal */}
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
