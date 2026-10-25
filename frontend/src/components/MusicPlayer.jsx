@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, 
-  Repeat, Repeat1, Shuffle, Download, Heart, Maximize2
+  Repeat, Repeat1, Shuffle, Download, Heart, Maximize2, Disc
 } from 'lucide-react';
 import FullPagePlayer from './FullPagePlayer';
+import DynamicIslandPlayer from './DynamicIslandPlayer';
 
 export default function MusicPlayer({
   currentSong,
@@ -32,6 +33,19 @@ export default function MusicPlayer({
   const [isMuted, setIsMuted] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState('none');
+  const [isIslandMode, setIsIslandMode] = useState(false);
+
+  // Automatic Dynamic Island mode on browser tab switch
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && currentSong) {
+        // Tab changed/hidden: switch to compact Dynamic Island mode in the corner
+        setIsIslandMode(true);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [currentSong]);
 
   // Handle current song changes
   useEffect(() => {
@@ -162,7 +176,7 @@ export default function MusicPlayer({
 
       {/* Floating Bottom Audio Player Bar */}
       <AnimatePresence>
-        {!isFullPlayerOpen && (
+        {!isFullPlayerOpen && !isIslandMode && (
           <motion.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -359,6 +373,19 @@ export default function MusicPlayer({
                     <Download className="w-4 h-4" />
                   </button>
 
+                  {/* Minimize to Dynamic Island Button */}
+                  <button
+                    onClick={() => setIsIslandMode(true)}
+                    className={`p-2.5 rounded-xl liquid-glass-pill transition-all cursor-pointer flex items-center justify-center ${
+                      theme === 'dark'
+                        ? 'text-cyan-400 hover:text-cyan-300 hover:border-cyan-400/50 hover:bg-cyan-500/10'
+                        : 'text-cyan-700 hover:bg-[#1c1b18] hover:text-[#f6f3eb] hover:border-[#1c1b18]'
+                    }`}
+                    title="Minimize to Dynamic Island (Corner Bubble)"
+                  >
+                    <Disc className="w-4 h-4 animate-spin-slow" />
+                  </button>
+
                   {/* Expand to Full Page Player */}
                   <button
                     onClick={() => setIsFullPlayerOpen(true)}
@@ -379,6 +406,25 @@ export default function MusicPlayer({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Dynamic Island Corner Floating Player */}
+      {!isFullPlayerOpen && isIslandMode && (
+        <DynamicIslandPlayer
+          currentSong={currentSong}
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          onNext={() => onNext(isShuffle)}
+          onPrev={() => onPrev(isShuffle)}
+          onToggleFavorite={onToggleFavorite}
+          isFavorite={isFavorite}
+          currentTime={currentTime}
+          duration={duration}
+          onSeek={handleSeek}
+          onExpandToFullPlayer={() => setIsFullPlayerOpen(true)}
+          onRestoreBottomBar={() => setIsIslandMode(false)}
+          theme={theme}
+        />
+      )}
     </>
   );
 }
