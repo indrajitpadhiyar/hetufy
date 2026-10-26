@@ -11,14 +11,18 @@ node_modules/
 backend/song-*.json
 *-*.json
 *service_account*.json
+*service-account*.json
 *credentials*.json
 service-account*.json
+*google-service-account*.json
 
 # Build outputs
 dist/
 dist-ssr/
 build/
+release/
 **/dist/
+**/release/
 
 # Logs
 logs/

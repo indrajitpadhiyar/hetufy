@@ -96,6 +96,14 @@ const sampleSongs = [
 
 const seedDatabase = async (req, res, next) => {
   try {
+    const isMongoConnected = require('mongoose').connection.readyState === 1;
+    if (!isMongoConnected) {
+      return res.status(200).json({
+        success: false,
+        message: 'MongoDB is currently unreachable. Seeding skipped; running in fallback mode.'
+      });
+    }
+
     const force = req.query.force === 'true';
 
     if (!force) {
@@ -118,7 +126,11 @@ const seedDatabase = async (req, res, next) => {
       data: inserted
     });
   } catch (error) {
-    next(error);
+    console.warn('[Seed Warning]: Error during seed (handled):', error.message);
+    res.status(200).json({
+      success: false,
+      message: `Seed deferred: ${error.message}`
+    });
   }
 };
 

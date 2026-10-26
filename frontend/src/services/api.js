@@ -1,9 +1,29 @@
 import { loadSongs } from '../data/songs';
-
-const API_BASE_URL = 'http://localhost:4000/api';
+import { getApiBaseUrl, apiRequest } from '../config/api';
 
 /**
- * Fetch all songs from Express backend with fallback to local static library
+ * Test connectivity to Render or local backend
+ */
+export async function testBackendConnection() {
+  const baseUrl = getApiBaseUrl();
+  try {
+    const res = await apiRequest('/health', { method: 'GET' }, 15000);
+    if (res.ok) {
+      const data = await res.json();
+      return { ok: true, url: baseUrl, data };
+    }
+    return { ok: false, url: baseUrl, status: res.status, message: `HTTP ${res.status}: Route or server error` };
+  } catch (error) {
+    let msg = error.message;
+    if (msg && (msg.includes('Failed to fetch') || msg.includes('NetworkError'))) {
+      msg = `Cannot reach ${baseUrl}. In browsers, disable ad-blockers / Brave Shields (which trigger ERR_BLOCKED_BY_CLIENT), or wait for Render cold-start.`;
+    }
+    return { ok: false, url: baseUrl, message: msg, isTimeout: error.isTimeout };
+  }
+}
+
+/**
+ * Fetch all songs from Express / Render backend with fallback to local static library
  */
 export async function getSongsFromAPI(genre = 'All', search = '') {
   let apiSongs = [];
@@ -12,7 +32,9 @@ export async function getSongsFromAPI(genre = 'All', search = '') {
     if (genre && genre !== 'All') params.append('genre', genre);
     if (search) params.append('search', search);
 
-    const response = await fetch(`${API_BASE_URL}/songs?${params.toString()}`);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const response = await apiRequest(`/songs${queryString}`, { method: 'GET' }, 20000);
+
     if (response.ok) {
       const data = await response.json();
       if (data.success && data.data) {
@@ -20,7 +42,7 @@ export async function getSongsFromAPI(genre = 'All', search = '') {
       }
     }
   } catch (error) {
-    console.warn('[API Client] Backend fetch warning:', error.message);
+    console.warn('[API Client] Backend fetch warning (using local fallback if available):', error.message);
   }
 
   let localSongs = loadSongs();
@@ -53,11 +75,16 @@ export async function getSongsFromAPI(genre = 'All', search = '') {
  */
 export async function seedBackendSongs() {
   try {
-    const response = await fetch(`${API_BASE_URL}/seed`, { method: 'POST' });
+    const response = await apiRequest('/seed', { method: 'POST' }, 15000);
+    if (!response.ok) {
+      // Backend MongoDB not connected or seeding deferred, safe to bypass
+      return null;
+    }
     const data = await response.json();
     return data;
   } catch (e) {
-    console.warn('[API Client] Could not seed backend:', e.message);
+    // Silent fallback to static catalog
+    return null;
   }
 }
 
@@ -65,9 +92,9 @@ export async function seedBackendSongs() {
  * Record audio play event in backend analytics/Redis
  */
 export async function recordSongPlay(songId) {
-  if (!songId || typeof songId === 'number') return; // Skip numeric local IDs
+  if (!songId || typeof songId === 'number') return;
   try {
-    await fetch(`${API_BASE_URL}/songs/${songId}/play`, { method: 'POST' });
+    await apiRequest(`/songs/${songId}/play`, { method: 'POST' }, 5000);
   } catch (e) {
     // Silent catch
   }
@@ -79,7 +106,7 @@ export async function recordSongPlay(songId) {
 export async function recordSongDownload(songId) {
   if (!songId || typeof songId === 'number') return;
   try {
-    await fetch(`${API_BASE_URL}/songs/${songId}/download`);
+    await apiRequest(`/songs/${songId}/download`, { method: 'GET' }, 5000);
   } catch (e) {
     // Silent catch
   }
@@ -91,14 +118,59 @@ export async function recordSongDownload(songId) {
 export async function toggleLikeInBackend(songId, isFavorite) {
   if (!songId || typeof songId === 'number') return;
   try {
-    await fetch(`${API_BASE_URL}/songs/${songId}/like`, {
+    await apiRequest(`/songs/${songId}/like`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: isFavorite ? 'like' : 'unlike' })
-    });
+    }, 5000);
   } catch (e) {
     // Silent catch
   }
+}
+
+/**
+ * Authentication Services
+ */
+export async function loginUser(email, password) {
+  const response = await apiRequest('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
+  const data = await response.json();
+  if (data.token) {
+    localStorage.setItem('hetufy_token', data.token);
+  }
+  return data;
+}
+
+export async function registerUser(username, email, password) {
+  const response = await apiRequest('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ username, email, password })
+  });
+  const data = await response.json();
+  if (data.token) {
+    localStorage.setItem('hetufy_token', data.token);
+  }
+  return data;
+}
+
+export async function getCurrentUser() {
+  const token = localStorage.getItem('hetufy_token');
+  if (!token) return null;
+  try {
+    const response = await apiRequest('/auth/me', { method: 'GET' });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (e) {
+    // Token expired or invalid
+    localStorage.removeItem('hetufy_token');
+  }
+  return null;
+}
+
+export function logoutUser() {
+  localStorage.removeItem('hetufy_token');
 }
 
 /**

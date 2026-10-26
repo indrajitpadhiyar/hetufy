@@ -65,6 +65,7 @@ app.get('/', (req, res) => {
 app.use('/api/songs', songRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/health', healthRoutes); // Root health check fallback
 app.use('/api/seed', seedRoutes);
 app.use('/api/drive', driveRoutes);
 

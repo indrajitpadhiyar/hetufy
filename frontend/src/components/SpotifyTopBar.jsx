@@ -106,13 +106,25 @@ export default function SpotifyTopBar({
 
         {/* Windows OS Window Controls */}
         <div className="flex items-center space-x-2 pl-2 border-l border-white/10 text-zinc-400">
-          <button className="p-1 hover:text-white transition-colors" title="Minimize">
+          <button 
+            onClick={() => window.electronAPI?.minimizeWindow?.()}
+            className="p-1 hover:text-white transition-colors cursor-pointer" 
+            title="Minimize"
+          >
             <Minus className="w-3.5 h-3.5" />
           </button>
-          <button className="p-1 hover:text-white transition-colors" title="Maximize">
+          <button 
+            onClick={() => window.electronAPI?.maximizeWindow?.()}
+            className="p-1 hover:text-white transition-colors cursor-pointer" 
+            title="Maximize"
+          >
             <Square className="w-3 h-3" />
           </button>
-          <button className="p-1 hover:text-rose-400 transition-colors" title="Close">
+          <button 
+            onClick={() => window.electronAPI?.closeWindow?.()}
+            className="p-1 hover:text-rose-400 transition-colors cursor-pointer" 
+            title="Close"
+          >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>

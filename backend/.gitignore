@@ -7,5 +7,7 @@ node_modules/
 song-*.json
 *-*.json
 *service_account*.json
+*service-account*.json
 *credentials*.json
 service-account*.json
+google-service-account*.json

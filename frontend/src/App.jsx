@@ -65,7 +65,6 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
     async function loadData() {
-      await seedBackendSongs();
       const liveSongs = await getSongsFromAPI(activeCategory, searchQuery);
       if (isMounted && liveSongs && liveSongs.length > 0) {
         setSongList(liveSongs);

@@ -13,7 +13,11 @@ const syncDrive = async (req, res, next) => {
       data: result.songs
     });
   } catch (error) {
-    next(error);
+    res.status(200).json({
+      success: false,
+      message: `Google Drive sync deferred: ${error.message}`,
+      data: []
+    });
   }
 };
 
@@ -25,7 +29,7 @@ const listDriveFiles = async (req, res, next) => {
     const files = await listAudioFilesFromDrive();
     res.status(200).json({ success: true, count: files.length, data: files });
   } catch (error) {
-    next(error);
+    res.status(200).json({ success: false, count: 0, data: [], message: error.message });
   }
 };
 
@@ -36,6 +40,10 @@ const streamAudio = async (req, res, next) => {
   try {
     const { fileId } = req.params;
     const metadata = await getFileMetadata(fileId);
+    if (!metadata) {
+      return res.status(404).json({ success: false, message: 'Audio file not found in Google Drive' });
+    }
+
     const fileSize = Number(metadata.size || 0);
     const contentType = metadata.mimeType || 'audio/mpeg';
 
@@ -69,7 +77,13 @@ const streamAudio = async (req, res, next) => {
   } catch (error) {
     console.error(`[Drive Stream Error] fileId ${req.params.fileId}:`, error.message);
     if (!res.headersSent) {
-      res.status(500).json({ success: false, message: 'Failed to stream audio file from Google Drive' });
+      const isConfigError = error.message.includes('not configured') || error.message.includes('not authenticated');
+      res.status(isConfigError ? 503 : 500).json({
+        success: false,
+        message: isConfigError
+          ? 'Google Drive service is not configured on the server.'
+          : 'Failed to stream audio file from Google Drive'
+      });
     }
   }
 };

@@ -12,6 +12,13 @@ const generateToken = (id) => {
 // @access  Public
 const registerUser = async (req, res, next) => {
   try {
+    if (require('mongoose').connection.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: 'Authentication service temporarily offline: MongoDB is not connected.'
+      });
+    }
+
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
@@ -50,6 +57,13 @@ const registerUser = async (req, res, next) => {
 // @access  Public
 const loginUser = async (req, res, next) => {
   try {
+    if (require('mongoose').connection.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: 'Authentication service temporarily offline: MongoDB is not connected.'
+      });
+    }
+
     const { email, password } = req.body;
 
     const user = await User.findOne({ email }).select('+password');
