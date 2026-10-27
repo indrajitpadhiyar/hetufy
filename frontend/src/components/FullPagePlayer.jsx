@@ -3,9 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, 
   Repeat, Repeat1, Shuffle, Download, Heart, ChevronDown, 
-  Minimize2, Music, Sparkles, ListMusic, Settings, Sun, Moon
+  Minimize2, Music, Sparkles, ListMusic
 } from 'lucide-react';
-import SettingsModal from './SettingsModal';
 
 const CURATED_PLAYLISTS = [
   {
@@ -95,11 +94,8 @@ export default function FullPagePlayer({
   formatTime,
   progressPercentage = 0,
   theme = 'light',
-  setTheme = () => {},
-  onOpenSettings
+  setTheme = () => {}
 }) {
-  const [isInternalSettingsOpen, setIsInternalSettingsOpen] = useState(false);
-
   if (!currentSong) return null;
 
   const isDark = theme === 'dark';
@@ -107,18 +103,6 @@ export default function FullPagePlayer({
   // Recommendations (excluding current song)
   const recommendations = songList.filter(s => s.id !== currentSong.id).slice(0, 4);
   const queueTracks = songList.length > 0 ? songList : [currentSong];
-
-  const handleOpenSettingsModal = () => {
-    if (onOpenSettings) {
-      onOpenSettings();
-    } else {
-      setIsInternalSettingsOpen(true);
-    }
-  };
-
-  const toggleThemeQuick = () => {
-    setTheme(isDark ? 'light' : 'dark');
-  };
 
   return (
     <AnimatePresence>
@@ -158,32 +142,6 @@ export default function FullPagePlayer({
             {/* Right Top Header Actions: Theme Quick-Toggle, Settings, Minimize */}
             <div className="flex items-center gap-2.5">
               
-              {/* Quick Sun/Moon Toggle */}
-              <button
-                onClick={toggleThemeQuick}
-                className={`p-2 rounded-full border transition-all cursor-pointer active:scale-90 ${
-                  isDark 
-                    ? 'bg-white/5 hover:bg-white/15 border-white/10 text-amber-300' 
-                    : 'bg-[#eee9df] hover:bg-[#e4ded4] border-[#d6cfc4] text-[#1c1b18]'
-                }`}
-                title={`Switch to ${isDark ? 'Light' : 'Dark'} Theme`}
-              >
-                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-
-              {/* Settings Action Button */}
-              <button
-                onClick={handleOpenSettingsModal}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer active:scale-95 text-xs font-medium ${
-                  isDark 
-                    ? 'bg-white/5 hover:bg-white/15 border-white/10 text-zinc-300 hover:text-white' 
-                    : 'bg-[#eee9df] hover:bg-[#e4ded4] border-[#d6cfc4] text-[#1c1b18]'
-                }`}
-                title="Settings & Themes"
-              >
-                <Settings className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Settings</span>
-              </button>
 
               {/* Collapse / Minimize Action */}
               <button
@@ -689,18 +647,6 @@ export default function FullPagePlayer({
                   <Download className="w-4 h-4" />
                 </button>
 
-                {/* Settings Toggle in Bottom Bar */}
-                <button
-                  onClick={handleOpenSettingsModal}
-                  className={`p-2 rounded-xl border transition-all cursor-pointer ${
-                    isDark
-                      ? 'bg-white/5 hover:bg-white/15 border-white/10 text-zinc-300 hover:text-white'
-                      : 'bg-[#eee9df] hover:bg-[#e4ded4] border-[#d6cfc4] text-[#1c1b18]'
-                  }`}
-                  title="Theme & Settings"
-                >
-                  <Settings className="w-4 h-4" />
-                </button>
 
                 {/* Minimize Toggle */}
                 <button
@@ -719,13 +665,6 @@ export default function FullPagePlayer({
             </div>
           </div>
 
-          {/* Internal Settings Modal if invoked from within full player */}
-          <SettingsModal
-            isOpen={isInternalSettingsOpen}
-            onClose={() => setIsInternalSettingsOpen(false)}
-            theme={theme}
-            setTheme={setTheme}
-          />
 
         </motion.div>
       )}

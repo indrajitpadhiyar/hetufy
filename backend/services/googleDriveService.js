@@ -462,6 +462,9 @@ const accentColors = [
  */
 const syncGoogleDriveSongs = async (baseUrl = "http://localhost:4000") => {
   try {
+    if (baseUrl.includes('onrender.com') && baseUrl.startsWith('http://')) {
+      baseUrl = baseUrl.replace('http://', 'https://');
+    }
     const driveFiles = await listAudioFilesFromDrive();
     const coverFiles = await listCoverImagesFromDrive();
 

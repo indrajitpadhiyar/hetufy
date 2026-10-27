@@ -14,7 +14,9 @@ export default function SpotifyMainView({
   onOpenAddToPlaylist,
   activeCategory,
   onSelectCategory,
-  categories = []
+  categories = [],
+  isLoading = false,
+  onRetry = () => {}
 }) {
   // Top 8 songs for the quick access 2-column grid
   const quickAccessSongs = songs.slice(0, 8);
@@ -191,6 +193,27 @@ export default function SpotifyMainView({
           </div>
 
           <div className="space-y-1">
+            {isLoading && remainingSongs.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+                <div className="w-8 h-8 border-2 border-[#1ed760] border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-zinc-300 font-medium">Connecting to Render Cloud Backend...</p>
+                <p className="text-xs text-zinc-500 max-w-sm">Fetching your live music tracks. If the Render backend is waking up from sleep, this may take a few moments.</p>
+              </div>
+            )}
+
+            {!isLoading && remainingSongs.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center space-y-3 bg-[#181818] rounded-xl border border-white/5 p-6">
+                <p className="text-sm text-zinc-300 font-medium">No songs currently showing</p>
+                <p className="text-xs text-zinc-500 max-w-sm">Could not find tracks for this category or the server is still starting up.</p>
+                <button
+                  onClick={onRetry}
+                  className="px-4 py-2 bg-[#1ed760] text-black text-xs font-bold rounded-full hover:bg-[#1db954] transition-all cursor-pointer shadow-md"
+                >
+                  Retry Loading Songs
+                </button>
+              </div>
+            )}
+
             {remainingSongs.map((song, index) => {
               const isCurrent = currentSong?.id === song.id;
               const isSongPlaying = isCurrent && isPlaying;

@@ -23,7 +23,6 @@ export default function MusicPlayer({
   setIsFullPlayerOpen = () => {},
   theme = 'dark',
   setTheme = () => {},
-  onOpenSettings = () => {},
   onToggleRightSidebar = () => {}
 }) {
   const audioRef = useRef(null);
@@ -173,7 +172,6 @@ export default function MusicPlayer({
         progressPercentage={progressPercentage}
         theme={theme}
         setTheme={setTheme}
-        onOpenSettings={onOpenSettings}
       />
 
       {/* Spotify Desktop Bottom Player Bar */}

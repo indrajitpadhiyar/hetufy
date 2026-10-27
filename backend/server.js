@@ -24,6 +24,9 @@ const { syncGoogleDriveSongs } = require('./services/googleDriveService');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Enable trust proxy for Render reverse proxy HTTPS detection
+app.enable('trust proxy');
+
 // Enable CORS for frontend Vite app (http://localhost:5173 or all origins in dev)
 app.use(
   cors({

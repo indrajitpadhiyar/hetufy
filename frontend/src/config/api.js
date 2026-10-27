@@ -8,9 +8,7 @@
 // Default Render or local endpoints
 const DEFAULT_DEV_API = "http://localhost:4000/api";
 // Configurable Render backend URL (must point to /api where Express routes are mounted)
-const DEFAULT_PROD_API =
-  (import.meta.env.VITE_API_BASE_URL && import.meta.env.VITE_API_BASE_URL.trim()) ||
-  "https://idrmusicbackend.onrender.com/api";
+const DEFAULT_PROD_API = "https://idrmusicbackend.onrender.com/api";
 
 /**
  * Normalizes any API URL to ensure it ends with /api (without double slashes)
@@ -27,24 +25,38 @@ export function normalizeApiUrl(url) {
 
 /**
  * Get the active API Base URL.
- * Order of priority:
- * 1. Runtime override stored in localStorage (allows desktop users to point to custom Render instance)
- * 2. Vite environment variable (VITE_API_BASE_URL)
- * 3. Default environment-based URL
+ * Automatically ensures Electron desktop app connects to live Render backend.
  */
 export function getApiBaseUrl() {
+  const isElectron = 
+    typeof window !== "undefined" && 
+    (Boolean(window.electronAPI?.isElectron) || window.location?.protocol === 'file:');
+
   if (typeof window !== "undefined") {
     const savedUrl = localStorage.getItem("hetufy_api_base_url");
     if (savedUrl && savedUrl.trim()) {
-      return normalizeApiUrl(savedUrl);
+      // Clear stale localhost in packaged desktop app
+      if (isElectron && savedUrl.includes("localhost")) {
+        localStorage.removeItem("hetufy_api_base_url");
+      } else {
+        return normalizeApiUrl(savedUrl);
+      }
     }
   }
 
   if (import.meta.env.VITE_API_BASE_URL) {
+    if (isElectron && import.meta.env.VITE_API_BASE_URL.includes("localhost")) {
+      return normalizeApiUrl(DEFAULT_PROD_API);
+    }
     return normalizeApiUrl(import.meta.env.VITE_API_BASE_URL);
   }
 
-  return import.meta.env.DEV ? DEFAULT_DEV_API : normalizeApiUrl(DEFAULT_PROD_API);
+  // Desktop apps or production builds connect to hosted Render API
+  if (isElectron || !import.meta.env.DEV) {
+    return normalizeApiUrl(DEFAULT_PROD_API);
+  }
+
+  return DEFAULT_DEV_API;
 }
 
 /**
@@ -77,7 +89,7 @@ export function resetApiBaseUrl() {
 /**
  * Robust fetch wrapper with timeout, Render cold-start detection, and error parsing
  */
-export async function apiRequest(endpoint, options = {}, timeoutMs = 25000) {
+export async function apiRequest(endpoint, options = {}, timeoutMs = 50000) {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 

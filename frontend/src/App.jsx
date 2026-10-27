@@ -7,7 +7,6 @@ import MusicPlayer from './components/MusicPlayer';
 import Toast from './components/Toast';
 import PlaylistModal from './components/PlaylistModal';
 import AddToPlaylistModal from './components/AddToPlaylistModal';
-import SettingsModal from './components/SettingsModal';
 import { songs, genres } from './data/songs';
 import { getSongsFromAPI, recordSongPlay, recordSongDownload, toggleLikeInBackend, seedBackendSongs } from './services/api';
 
@@ -26,20 +25,16 @@ export default function App() {
   const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
 
-  // Theme State with LocalStorage Persistence (Default to Dark Spotify Theme)
+  // Theme State locked to Dark Theme
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('hetufy_theme') || 'dark';
+    localStorage.setItem('hetufy_theme', 'dark');
+    return 'dark';
   });
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('hetufy_theme', theme);
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+    localStorage.setItem('hetufy_theme', 'dark');
+    document.documentElement.classList.add('dark');
+  }, []);
 
   // Playlist State & LocalStorage Persistence
   const [playlists, setPlaylists] = useState(() => {
@@ -61,20 +56,28 @@ export default function App() {
     localStorage.setItem('mitter_playlists', JSON.stringify(playlists));
   }, [playlists]);
 
+  const [isLoadingSongs, setIsLoadingSongs] = useState(true);
+
   // Load songs from backend API or local scanner
-  useEffect(() => {
-    let isMounted = true;
-    async function loadData() {
+  const loadData = async () => {
+    setIsLoadingSongs(true);
+    try {
       const liveSongs = await getSongsFromAPI(activeCategory, searchQuery);
-      if (isMounted && liveSongs && liveSongs.length > 0) {
+      if (liveSongs && liveSongs.length > 0) {
         setSongList(liveSongs);
         if (!currentSong) {
           setCurrentSong(liveSongs[0]);
         }
       }
+    } catch (e) {
+      console.warn('Failed to load songs from API:', e);
+    } finally {
+      setIsLoadingSongs(false);
     }
+  };
+
+  useEffect(() => {
     loadData();
-    return () => { isMounted = false; };
   }, [activeCategory, searchQuery]);
 
   // Probe exact audio duration for each track and update state
@@ -242,7 +245,6 @@ export default function App() {
       <SpotifyTopBar 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenPlaylists={() => setIsPlaylistModalOpen(true)}
         onResetToHome={() => {
           setActiveCategory('All');
@@ -298,6 +300,8 @@ export default function App() {
           activeCategory={activeCategory}
           onSelectCategory={setActiveCategory}
           categories={genres}
+          isLoading={isLoadingSongs}
+          onRetry={loadData}
         />
 
         {/* Right Column: Now Playing View (Toggleable) */}
@@ -330,7 +334,6 @@ export default function App() {
           setIsFullPlayerOpen={setIsFullPlayerOpen}
           theme={theme}
           setTheme={setTheme}
-          onOpenSettings={() => setIsSettingsModalOpen(true)}
           onToggleRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
         />
       )}
@@ -362,13 +365,6 @@ export default function App() {
         theme={theme}
       />
 
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
-        theme={theme}
-        setTheme={setTheme}
-      />
 
       {/* Toast Notification */}
       <Toast toast={toast} />

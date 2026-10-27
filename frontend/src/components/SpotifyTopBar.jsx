@@ -1,13 +1,12 @@
 import React from 'react';
 import { 
   Home, Search, Bell, Users, Folder, ChevronLeft, ChevronRight, 
-  Minus, Square, X, MoreHorizontal, Sparkles 
+  MoreHorizontal 
 } from 'lucide-react';
 
 export default function SpotifyTopBar({
   searchQuery,
   setSearchQuery,
-  onOpenSettings,
   onOpenPlaylists,
   onResetToHome
 }) {
@@ -15,13 +14,12 @@ export default function SpotifyTopBar({
     <header className="h-12 bg-black text-zinc-300 flex items-center justify-between px-3 select-none flex-shrink-0 z-30 border-b border-white/5">
       {/* Left: Window Dots & Navigation Arrows */}
       <div className="flex items-center space-x-3 w-60">
-        <button 
-          onClick={onOpenSettings}
-          className="text-zinc-400 hover:text-white p-1 rounded-full transition-colors cursor-pointer"
-          title="App Menu"
+        <div 
+          className="text-zinc-400 p-1"
+          title="Hetufy"
         >
           <MoreHorizontal className="w-4 h-4" />
-        </button>
+        </div>
 
         <div className="flex items-center space-x-1.5 ml-1">
           <button 
@@ -78,9 +76,8 @@ export default function SpotifyTopBar({
       {/* Right: Notifications, Friends, Profile & Windows Control Buttons */}
       <div className="flex items-center justify-end space-x-3 w-60">
         <button 
-          onClick={onOpenSettings}
           className="p-1.5 rounded-full hover:bg-[#1f1f1f] text-zinc-400 hover:text-white transition-colors cursor-pointer"
-          title="What's New"
+          title="Notifications"
         >
           <Bell className="w-4 h-4" />
         </button>
@@ -88,45 +85,19 @@ export default function SpotifyTopBar({
         <button 
           onClick={onOpenPlaylists}
           className="p-1.5 rounded-full hover:bg-[#1f1f1f] text-zinc-400 hover:text-white transition-colors cursor-pointer"
-          title="Friend Activity"
+          title="Playlists"
         >
           <Users className="w-4 h-4" />
         </button>
 
-        {/* Profile Avatar Badge (with Apple/Icon from reference) */}
-        <button 
-          onClick={onOpenSettings}
-          className="relative w-8 h-8 rounded-full bg-[#181818] border-2 border-white/80 overflow-hidden flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shadow-sm"
-          title="Indrajit Padhiyar Profile"
+        {/* Profile Avatar Badge */}
+        <div 
+          className="relative w-8 h-8 rounded-full bg-[#181818] border-2 border-white/80 overflow-hidden flex items-center justify-center shadow-sm"
+          title="User Profile"
         >
           <div className="w-full h-full bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-xs font-bold text-white">
             🍎
           </div>
-        </button>
-
-        {/* Windows OS Window Controls */}
-        <div className="flex items-center space-x-2 pl-2 border-l border-white/10 text-zinc-400">
-          <button 
-            onClick={() => window.electronAPI?.minimizeWindow?.()}
-            className="p-1 hover:text-white transition-colors cursor-pointer" 
-            title="Minimize"
-          >
-            <Minus className="w-3.5 h-3.5" />
-          </button>
-          <button 
-            onClick={() => window.electronAPI?.maximizeWindow?.()}
-            className="p-1 hover:text-white transition-colors cursor-pointer" 
-            title="Maximize"
-          >
-            <Square className="w-3 h-3" />
-          </button>
-          <button 
-            onClick={() => window.electronAPI?.closeWindow?.()}
-            className="p-1 hover:text-rose-400 transition-colors cursor-pointer" 
-            title="Close"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
     </header>

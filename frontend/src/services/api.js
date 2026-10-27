@@ -27,22 +27,29 @@ export async function testBackendConnection() {
  */
 export async function getSongsFromAPI(genre = 'All', search = '') {
   let apiSongs = [];
-  try {
-    const params = new URLSearchParams();
-    if (genre && genre !== 'All') params.append('genre', genre);
-    if (search) params.append('search', search);
+  const params = new URLSearchParams();
+  if (genre && genre !== 'All') params.append('genre', genre);
+  if (search) params.append('search', search);
 
-    const queryString = params.toString() ? `?${params.toString()}` : '';
-    const response = await apiRequest(`/songs${queryString}`, { method: 'GET' }, 20000);
+  const queryString = params.toString() ? `?${params.toString()}` : '';
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success && data.data) {
-        apiSongs = data.data.map(transformSongFormat);
+  // Retry up to 2 times to handle Render free-tier cold starts smoothly
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const response = await apiRequest(`/songs${queryString}`, { method: 'GET' }, 35000);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data && data.data.length > 0) {
+          apiSongs = data.data.map(transformSongFormat);
+          break;
+        }
+      }
+    } catch (error) {
+      console.warn(`[API Client] Attempt ${attempt} backend fetch warning:`, error.message);
+      if (attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
     }
-  } catch (error) {
-    console.warn('[API Client] Backend fetch warning (using local fallback if available):', error.message);
   }
 
   let localSongs = loadSongs();
@@ -177,6 +184,17 @@ export function logoutUser() {
  * Convert backend Mongo song schema into frontend component schema
  */
 function transformSongFormat(song) {
+  let cover = song.coverUrl;
+  let audio = song.audioUrl;
+
+  // Enforce HTTPS for Render CDN and backend links to avoid mixed-content blocking
+  if (cover && cover.startsWith('http://') && cover.includes('onrender.com')) {
+    cover = cover.replace('http://', 'https://');
+  }
+  if (audio && audio.startsWith('http://') && audio.includes('onrender.com')) {
+    audio = audio.replace('http://', 'https://');
+  }
+
   return {
     id: song._id || song.id,
     title: song.title,
@@ -184,8 +202,8 @@ function transformSongFormat(song) {
     album: song.album || 'Single Library',
     genre: song.genre || 'Pop',
     duration: song.duration || 180,
-    cover: song.coverUrl,
-    audio: song.audioUrl,
+    cover,
+    audio,
     featured: song.featured || false,
     downloads: song.downloadsCount ? `${song.downloadsCount} DLs` : 'MP3 Download',
     playsCount: song.playsCount || 0,

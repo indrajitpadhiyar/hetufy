@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, ArrowUpRight, ListMusic, Settings, Sun, Moon } from 'lucide-react';
+import { Search, X, ArrowUpRight, ListMusic } from 'lucide-react';
 
 export function SidebarDock({ activeCategory, setActiveCategory }) {
   return null;
@@ -11,9 +11,8 @@ export default function Navbar({
   activeCategory, 
   setActiveCategory, 
   onOpenPlaylists,
-  theme = 'light',
-  setTheme = () => {},
-  onOpenSettings = () => {}
+  theme = 'dark',
+  setTheme = () => {}
 }) {
   const [showSearch, setShowSearch] = useState(false);
   const isDark = theme === 'dark';
@@ -116,27 +115,6 @@ export default function Navbar({
             )}
           </div>
 
-          {/* Quick Theme Toggle */}
-          <button
-            onClick={() => setTheme(isDark ? 'light' : 'dark')}
-            className={`p-2 transition-all cursor-pointer rounded-full active:scale-90 ${
-              isDark ? 'text-amber-400 hover:bg-white/10' : 'text-[#5e584f] hover:text-[#1c1b18] hover:bg-[#eee9df]'
-            }`}
-            title={`Switch to ${isDark ? 'Light' : 'Dark'} Theme`}
-          >
-            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
-          </button>
-
-          {/* Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            className={`p-2 transition-colors cursor-pointer rounded-full ${
-              isDark ? 'text-zinc-300 hover:text-white hover:bg-white/10' : 'text-[#5e584f] hover:text-[#1c1b18] hover:bg-[#eee9df]'
-            }`}
-            title="Settings & Themes"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
 
           {/* Playlists Button on Mobile / Quick Launch */}
           <button
