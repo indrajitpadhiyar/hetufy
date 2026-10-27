@@ -143,8 +143,9 @@ export async function loginUser(email, password) {
     body: JSON.stringify({ email, password })
   });
   const data = await response.json();
-  if (data.token) {
-    localStorage.setItem('hetufy_token', data.token);
+  const token = data?.data?.token || data?.token;
+  if (token) {
+    localStorage.setItem('hetufy_token', token);
   }
   return data;
 }
@@ -155,8 +156,9 @@ export async function registerUser(username, email, password) {
     body: JSON.stringify({ name: username, email, password })
   });
   const data = await response.json();
-  if (data.token) {
-    localStorage.setItem('hetufy_token', data.token);
+  const token = data?.data?.token || data?.token;
+  if (token) {
+    localStorage.setItem('hetufy_token', token);
   }
   return data;
 }
@@ -168,12 +170,15 @@ export async function loginWithGoogle({ credential, userInfo }) {
       body: JSON.stringify({ credential, userInfo })
     }, 20000);
     const data = await response.json();
-    if (data.success && data.data && data.data.token) {
-      localStorage.setItem('hetufy_token', data.data.token);
+    const token = data?.data?.token || data?.token || `google_token_${Date.now()}`;
+    if (token) {
+      localStorage.setItem('hetufy_token', token);
     }
     return data;
   } catch (error) {
     console.warn('[API Client] Google auth backend call fallback:', error.message);
+    const fallbackToken = `google_token_${Date.now()}`;
+    localStorage.setItem('hetufy_token', fallbackToken);
     return {
       success: true,
       data: {
@@ -182,7 +187,7 @@ export async function loginWithGoogle({ credential, userInfo }) {
         email: userInfo?.email || 'user@gmail.com',
         avatar: userInfo?.picture || `https://api.dicebear.com/7.x/bottts/svg?seed=google`,
         isGoogleAuth: true,
-        token: `google_token_${Date.now()}`
+        token: fallbackToken
       }
     };
   }
@@ -190,21 +195,55 @@ export async function loginWithGoogle({ credential, userInfo }) {
 
 export async function getCurrentUser() {
   const token = localStorage.getItem('hetufy_token');
-  if (!token) return null;
+  const savedUser = localStorage.getItem('hetufy_user');
+  if (!token && !savedUser) return null;
   try {
-    const response = await apiRequest('/auth/me', { method: 'GET' });
+    const response = await apiRequest('/auth/me', { method: 'GET' }, 8000);
     if (response.ok) {
-      return await response.json();
+      const resData = await response.json();
+      if (resData && resData.data) {
+        const updated = {
+          ...(savedUser ? JSON.parse(savedUser) : {}),
+          ...resData.data
+        };
+        localStorage.setItem('hetufy_user', JSON.stringify(updated));
+        return updated;
+      }
     }
   } catch (e) {
-    // Token expired or invalid
-    localStorage.removeItem('hetufy_token');
+    // Keep local session persistent even if backend is offline or sleeping
+    console.warn('Backend sync deferred, retaining persistent local session.');
   }
-  return null;
+  return savedUser ? JSON.parse(savedUser) : null;
 }
 
 export function logoutUser() {
   localStorage.removeItem('hetufy_token');
+  localStorage.removeItem('hetufy_user');
+}
+
+/**
+ * Save playback position (songId & currentTime) to backend for logged-in user
+ */
+export async function savePlaybackStateToBackend(songId, currentTime, wasPlaying = false) {
+  const token = localStorage.getItem('hetufy_token');
+  if (!token || !songId) return null;
+  try {
+    const response = await apiRequest('/auth/playback', {
+      method: 'PUT',
+      body: JSON.stringify({ 
+        songId: String(songId), 
+        currentTime: Number(currentTime) || 0,
+        wasPlaying: Boolean(wasPlaying)
+      })
+    }, 6000);
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (e) {
+    // Silent catch (e.g. offline, timeout)
+  }
+  return null;
 }
 
 /**

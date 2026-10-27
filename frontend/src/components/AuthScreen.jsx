@@ -139,6 +139,8 @@ export default function AuthScreen({ onLoginSuccess }) {
     try {
       const result = await loginWithGoogle({ credential, userInfo });
       const userObj = {
+        _id: result?.data?._id || userInfo.sub || `google_${Date.now()}`,
+        id: result?.data?._id || userInfo.sub || `google_${Date.now()}`,
         name: result?.data?.name || userInfo.name || userInfo.email.split('@')[0],
         email: result?.data?.email || userInfo.email,
         avatar:
@@ -147,16 +149,23 @@ export default function AuthScreen({ onLoginSuccess }) {
           `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userInfo.email)}`,
         role: result?.data?.role || 'user',
         isGoogleAuth: true,
+        lastPlayback: result?.data?.lastPlayback || null,
         token: result?.data?.token || `google_token_${Date.now()}`
       };
 
       localStorage.setItem('hetufy_user', JSON.stringify(userObj));
+      if (userObj.token) {
+        localStorage.setItem('hetufy_token', userObj.token);
+      }
+      localStorage.setItem('hetufy_logged_in', 'true');
       setSuccessMessage(`Welcome, ${userObj.name}!`);
       setTimeout(() => {
         onLoginSuccess(userObj);
       }, 400);
     } catch (e) {
       const fallbackUser = {
+        _id: userInfo.sub || `google_${Date.now()}`,
+        id: userInfo.sub || `google_${Date.now()}`,
         name: userInfo.name || userInfo.email.split('@')[0],
         email: userInfo.email,
         avatar: userInfo.picture,
@@ -164,6 +173,8 @@ export default function AuthScreen({ onLoginSuccess }) {
         token: `google_token_${Date.now()}`
       };
       localStorage.setItem('hetufy_user', JSON.stringify(fallbackUser));
+      localStorage.setItem('hetufy_token', fallbackUser.token);
+      localStorage.setItem('hetufy_logged_in', 'true');
       setSuccessMessage(`Welcome, ${fallbackUser.name}!`);
       setTimeout(() => {
         onLoginSuccess(fallbackUser);
@@ -196,12 +207,18 @@ export default function AuthScreen({ onLoginSuccess }) {
         const result = await loginUser(email.trim(), password);
         if (result && result.success && result.data) {
           const userObj = {
+            _id: result.data._id,
+            id: result.data._id,
             name: result.data.name || email.split('@')[0],
             email: result.data.email || email,
             avatar: result.data.avatar || null,
+            role: result.data.role || 'user',
+            lastPlayback: result.data.lastPlayback || null,
             token: result.data.token || 'auth_token'
           };
           localStorage.setItem('hetufy_user', JSON.stringify(userObj));
+          localStorage.setItem('hetufy_token', userObj.token);
+          localStorage.setItem('hetufy_logged_in', 'true');
           onLoginSuccess(userObj);
           return;
         } else {
@@ -219,12 +236,18 @@ export default function AuthScreen({ onLoginSuccess }) {
         const result = await registerUser(name.trim(), email.trim(), password);
         if (result && result.success && result.data) {
           const userObj = {
+            _id: result.data._id,
+            id: result.data._id,
             name: result.data.name || name,
             email: result.data.email || email,
             avatar: result.data.avatar || null,
+            role: result.data.role || 'user',
+            lastPlayback: result.data.lastPlayback || null,
             token: result.data.token || 'auth_token'
           };
           localStorage.setItem('hetufy_user', JSON.stringify(userObj));
+          localStorage.setItem('hetufy_token', userObj.token);
+          localStorage.setItem('hetufy_logged_in', 'true');
           onLoginSuccess(userObj);
           return;
         } else {
@@ -255,6 +278,8 @@ export default function AuthScreen({ onLoginSuccess }) {
       token: `local_token_${Date.now()}`
     };
     localStorage.setItem('hetufy_user', JSON.stringify(fallbackUser));
+    localStorage.setItem('hetufy_token', fallbackUser.token);
+    localStorage.setItem('hetufy_logged_in', 'true');
     setSuccessMessage('Logged in successfully!');
     setTimeout(() => {
       onLoginSuccess(fallbackUser);
@@ -296,6 +321,8 @@ export default function AuthScreen({ onLoginSuccess }) {
       token: 'guest_token'
     };
     localStorage.setItem('hetufy_user', JSON.stringify(guestUser));
+    localStorage.setItem('hetufy_token', guestUser.token);
+    localStorage.setItem('hetufy_logged_in', 'true');
     onLoginSuccess(guestUser);
   };
 

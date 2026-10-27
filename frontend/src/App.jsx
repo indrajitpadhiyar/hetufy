@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SpotifyTopBar from './components/SpotifyTopBar';
 import SpotifyLibrarySidebar from './components/SpotifyLibrarySidebar';
 import SpotifyMainView from './components/SpotifyMainView';
@@ -10,7 +10,14 @@ import AddToPlaylistModal from './components/AddToPlaylistModal';
 import LoadingScreen from './components/LoadingScreen';
 import AuthScreen from './components/AuthScreen';
 import { songs, genres } from './data/songs';
-import { getSongsFromAPI, recordSongPlay, recordSongDownload, toggleLikeInBackend, seedBackendSongs } from './services/api';
+import { 
+  getSongsFromAPI, 
+  recordSongPlay, 
+  recordSongDownload, 
+  toggleLikeInBackend, 
+  seedBackendSongs,
+  savePlaybackStateToBackend 
+} from './services/api';
 
 const DEFAULT_PLAYLISTS = [
   { id: 'pl-1', name: 'Studio Favorites', description: 'Handpicked vinyl recordings and arrangements', songIds: [1, 2] }
@@ -18,7 +25,6 @@ const DEFAULT_PLAYLISTS = [
 
 export default function App() {
   const [songList, setSongList] = useState(songs);
-  const [currentSong, setCurrentSong] = useState(songs[0] || null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -40,10 +46,96 @@ export default function App() {
     }
   });
 
+  // Helper to read saved playback position for a specific user
+  const getSavedPlayback = (user = currentUser) => {
+    if (!user) return null;
+    const userKey = `hetufy_last_playback_${user.email || user._id || user.id || 'default'}`;
+    let localSaved = null;
+    try {
+      const raw = localStorage.getItem(userKey);
+      if (raw) localSaved = JSON.parse(raw);
+    } catch (e) {}
+
+    const backendSaved = user.lastPlayback;
+    if (localSaved && backendSaved) {
+      const localTime = new Date(localSaved.updatedAt || 0).getTime();
+      const backendTime = new Date(backendSaved.updatedAt || 0).getTime();
+      return localTime >= backendTime ? localSaved : backendSaved;
+    }
+    return localSaved || backendSaved || null;
+  };
+
+  const initialSaved = getSavedPlayback(currentUser);
+
+  const [currentSong, setCurrentSong] = useState(() => {
+    if (initialSaved?.songId) {
+      const matched = songs.find(s => String(s.id) === String(initialSaved.songId));
+      if (matched) return matched;
+    }
+    return songs[0] || null;
+  });
+
+  const [initialSeekTime, setInitialSeekTime] = useState(() => {
+    return initialSaved?.currentTime ? Number(initialSaved.currentTime) : 0;
+  });
+
+  const hasRestoredPlaybackRef = useRef(false);
+  const backendSaveTimeoutRef = useRef(null);
+
+  // Save playback state to localStorage and debounced backend
+  const handleSavePlayback = (songId, currentTime, wasPlaying = false, forceBackend = false) => {
+    if (!currentUser) return;
+    const userKey = `hetufy_last_playback_${currentUser.email || currentUser._id || currentUser.id || 'default'}`;
+    const payload = {
+      songId: String(songId),
+      currentTime: Math.round(currentTime * 10) / 10,
+      wasPlaying: Boolean(wasPlaying),
+      updatedAt: new Date().toISOString()
+    };
+
+    // 1. Instant local storage save
+    try {
+      localStorage.setItem(userKey, JSON.stringify(payload));
+    } catch (e) {}
+
+    // 2. Debounced or immediate backend sync
+    if (forceBackend) {
+      if (backendSaveTimeoutRef.current) clearTimeout(backendSaveTimeoutRef.current);
+      savePlaybackStateToBackend(songId, payload.currentTime, wasPlaying);
+    } else {
+      if (backendSaveTimeoutRef.current) clearTimeout(backendSaveTimeoutRef.current);
+      backendSaveTimeoutRef.current = setTimeout(() => {
+        savePlaybackStateToBackend(songId, payload.currentTime, wasPlaying);
+      }, 3500);
+    }
+  };
+
   const handleLogout = () => {
+    if (currentSong && currentUser) {
+      handleSavePlayback(currentSong.id, 0, false, true);
+    }
     localStorage.removeItem('hetufy_user');
     localStorage.removeItem('hetufy_token');
+    localStorage.removeItem('hetufy_logged_in');
     setCurrentUser(null);
+    setIsPlaying(false);
+    triggerToast("Logged Out", "Playback state preserved for your next login", "info");
+  };
+
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+    const saved = getSavedPlayback(user);
+    if (saved && saved.songId) {
+      const matched = songList.find(s => String(s.id) === String(saved.songId));
+      if (matched) {
+        setCurrentSong(matched);
+        const seek = Number(saved.currentTime) || 0;
+        setInitialSeekTime(seek);
+        const minutes = Math.floor(seek / 60);
+        const seconds = Math.floor(seek % 60).toString().padStart(2, '0');
+        triggerToast("Session Resumed", `Resumed "${matched.title}" from ${minutes}:${seconds}`, "info");
+      }
+    }
   };
 
   // Theme State locked to Dark Theme
@@ -86,8 +178,26 @@ export default function App() {
       const liveSongs = await getSongsFromAPI(activeCategory, searchQuery);
       if (liveSongs && liveSongs.length > 0) {
         setSongList(liveSongs);
-        if (!currentSong) {
-          setCurrentSong(liveSongs[0]);
+        
+        // Restore user playback track if not already matched
+        if (!hasRestoredPlaybackRef.current) {
+          const saved = getSavedPlayback(currentUser);
+          if (saved && saved.songId) {
+            const matchedTrack = liveSongs.find(s => String(s.id) === String(saved.songId));
+            if (matchedTrack) {
+              setCurrentSong(matchedTrack);
+              const seek = Number(saved.currentTime) || 0;
+              setInitialSeekTime(seek);
+              hasRestoredPlaybackRef.current = true;
+              if (seek > 5) {
+                const minutes = Math.floor(seek / 60);
+                const seconds = Math.floor(seek % 60).toString().padStart(2, '0');
+                triggerToast("Resumed Track", `Continuing "${matchedTrack.title}" from ${minutes}:${seconds}`, "info");
+              }
+            }
+          } else if (!currentSong) {
+            setCurrentSong(liveSongs[0]);
+          }
         }
       }
     } catch (e) {
@@ -172,10 +282,12 @@ export default function App() {
 
   // Audio Handlers
   const handlePlaySong = (song) => {
+    setInitialSeekTime(0);
     setCurrentSong(song);
     setIsPlaying(true);
     setIsFullPlayerOpen(true);
     recordSongPlay(song.id);
+    handleSavePlayback(song.id, 0, true, false);
   };
 
   const handleTogglePlay = () => {
@@ -195,9 +307,11 @@ export default function App() {
       nextIndex = (currentIndex + 1) % songList.length;
     }
     const nextTrack = songList[nextIndex];
+    setInitialSeekTime(0);
     setCurrentSong(nextTrack);
     setIsPlaying(true);
     recordSongPlay(nextTrack.id);
+    handleSavePlayback(nextTrack.id, 0, true, false);
   };
 
   const handlePrev = (isShuffle = false) => {
@@ -210,9 +324,11 @@ export default function App() {
       prevIndex = (currentIndex - 1 + songList.length) % songList.length;
     }
     const prevTrack = songList[prevIndex];
+    setInitialSeekTime(0);
     setCurrentSong(prevTrack);
     setIsPlaying(true);
     recordSongPlay(prevTrack.id);
+    handleSavePlayback(prevTrack.id, 0, true, false);
   };
 
   const handleDownload = (song) => {
@@ -264,7 +380,7 @@ export default function App() {
   }
 
   if (!currentUser) {
-    return <AuthScreen onLoginSuccess={(user) => setCurrentUser(user)} />;
+    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (
@@ -366,6 +482,8 @@ export default function App() {
           theme={theme}
           setTheme={setTheme}
           onToggleRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+          initialSeekTime={initialSeekTime}
+          onSavePlayback={handleSavePlayback}
         />
       )}
 

@@ -3,7 +3,7 @@ const User = require('../models/User');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'musicdownload_super_secret_jwt_key_2026', {
-    expiresIn: '30d'
+    expiresIn: '365d'
   });
 };
 
@@ -44,6 +44,7 @@ const registerUser = async (req, res, next) => {
         email: user.email,
         avatar: user.avatar,
         role: user.role,
+        lastPlayback: user.lastPlayback || null,
         token: generateToken(user._id)
       }
     });
@@ -80,6 +81,7 @@ const loginUser = async (req, res, next) => {
         avatar: user.avatar,
         role: user.role,
         favorites: user.favorites,
+        lastPlayback: user.lastPlayback || null,
         token: generateToken(user._id)
       }
     });
@@ -162,6 +164,7 @@ const googleLogin = async (req, res, next) => {
           role: 'user',
           isGoogleAuth: true,
           favorites: [],
+          lastPlayback: null,
           token: generateToken(googleId || email)
         }
       });
@@ -197,8 +200,33 @@ const googleLogin = async (req, res, next) => {
         role: user.role,
         isGoogleAuth: true,
         favorites: user.favorites || [],
+        lastPlayback: user.lastPlayback || null,
         token: generateToken(user._id)
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update user's last playback track and timestamp
+// @route   PUT /api/auth/playback
+// @access  Private
+const updatePlayback = async (req, res, next) => {
+  try {
+    const { songId, currentTime, wasPlaying } = req.body;
+    if (require('mongoose').connection.readyState === 1 && req.user) {
+      req.user.lastPlayback = {
+        songId: songId ? String(songId) : null,
+        currentTime: Number(currentTime) || 0,
+        wasPlaying: Boolean(wasPlaying),
+        updatedAt: new Date()
+      };
+      await req.user.save();
+    }
+    res.status(200).json({
+      success: true,
+      data: req.user?.lastPlayback || { songId, currentTime, wasPlaying, updatedAt: new Date() }
     });
   } catch (error) {
     next(error);
@@ -209,5 +237,6 @@ module.exports = {
   registerUser,
   loginUser,
   googleLogin,
-  getMe
+  getMe,
+  updatePlayback
 };

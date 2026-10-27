@@ -23,18 +23,34 @@ export default function MusicPlayer({
   setIsFullPlayerOpen = () => {},
   theme = 'dark',
   setTheme = () => {},
-  onToggleRightSidebar = () => {}
+  onToggleRightSidebar = () => {},
+  initialSeekTime = 0,
+  onSavePlayback = () => {}
 }) {
   const audioRef = useRef(null);
+  const pendingSeekRef = useRef(initialSeekTime || 0);
+  const lastSavedTimeRef = useRef(0);
 
   // Audio Player State
-  const [currentTime, setCurrentTime] = useState(0);
+  const [currentTime, setCurrentTime] = useState(initialSeekTime || 0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState('none');
   const [isIslandMode, setIsIslandMode] = useState(false);
+
+  // Sync initialSeekTime if it changes externally
+  useEffect(() => {
+    if (initialSeekTime && initialSeekTime > 0) {
+      pendingSeekRef.current = initialSeekTime;
+      if (audioRef.current && audioRef.current.readyState >= 1) {
+        audioRef.current.currentTime = initialSeekTime;
+        setCurrentTime(initialSeekTime);
+        pendingSeekRef.current = 0;
+      }
+    }
+  }, [initialSeekTime]);
 
   // Automatic Dynamic Island mode on browser tab switch
   useEffect(() => {
@@ -48,13 +64,31 @@ export default function MusicPlayer({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [currentSong]);
 
+  // Window unload, page refresh or tab close: immediately save playback state
+  useEffect(() => {
+    const handleUnload = () => {
+      if (audioRef.current && currentSong) {
+        onSavePlayback(currentSong.id, audioRef.current.currentTime, isPlaying, true);
+      }
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('pagehide', handleUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+    };
+  }, [currentSong, isPlaying, onSavePlayback]);
+
   // Handle current song changes
   useEffect(() => {
     if (audioRef.current && currentSong) {
       audioRef.current.src = currentSong.audio;
       audioRef.current.load();
       if (isPlaying) {
-        audioRef.current.play().catch(err => console.log('Audio autoplay prevented:', err));
+        audioRef.current.play().catch(err => {
+          console.log('Audio autoplay prevented by browser policy:', err.message);
+          setIsPlaying(false);
+        });
       }
     }
   }, [currentSong]);
@@ -63,7 +97,10 @@ export default function MusicPlayer({
   useEffect(() => {
     if (!audioRef.current) return;
     if (isPlaying) {
-      audioRef.current.play().catch(err => console.log('Audio play failed:', err));
+      audioRef.current.play().catch(err => {
+        console.log('Audio play failed:', err.message);
+        setIsPlaying(false);
+      });
     } else {
       audioRef.current.pause();
     }
@@ -78,13 +115,36 @@ export default function MusicPlayer({
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+      const cur = audioRef.current.currentTime;
+      setCurrentTime(cur);
+      // Save locally every 2 seconds
+      if (Math.abs(cur - lastSavedTimeRef.current) >= 2) {
+        lastSavedTimeRef.current = cur;
+        onSavePlayback(currentSong.id, cur, isPlaying, false);
+      }
     }
   };
 
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
-      setDuration(audioRef.current.duration || currentSong?.duration || 0);
+      const audioDuration = audioRef.current.duration || currentSong?.duration || 0;
+      setDuration(audioDuration);
+      if (pendingSeekRef.current > 0 && pendingSeekRef.current < audioDuration) {
+        audioRef.current.currentTime = pendingSeekRef.current;
+        setCurrentTime(pendingSeekRef.current);
+        pendingSeekRef.current = 0;
+      }
+    }
+  };
+
+  const handleCanPlay = () => {
+    if (audioRef.current && pendingSeekRef.current > 0) {
+      const audioDuration = audioRef.current.duration || currentSong?.duration || 0;
+      if (pendingSeekRef.current < audioDuration) {
+        audioRef.current.currentTime = pendingSeekRef.current;
+        setCurrentTime(pendingSeekRef.current);
+      }
+      pendingSeekRef.current = 0;
     }
   };
 
@@ -105,6 +165,8 @@ export default function MusicPlayer({
     if (audioRef.current) {
       audioRef.current.currentTime = newTime;
     }
+    lastSavedTimeRef.current = newTime;
+    onSavePlayback(currentSong.id, newTime, isPlaying, false);
   };
 
   const toggleMute = () => {
@@ -135,9 +197,20 @@ export default function MusicPlayer({
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        onCanPlay={handleCanPlay}
         onEnded={handleEnded}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPlay={() => {
+          setIsPlaying(true);
+          if (audioRef.current && currentSong) {
+            onSavePlayback(currentSong.id, audioRef.current.currentTime, true, false);
+          }
+        }}
+        onPause={() => {
+          setIsPlaying(false);
+          if (audioRef.current && currentSong) {
+            onSavePlayback(currentSong.id, audioRef.current.currentTime, false, true);
+          }
+        }}
       />
 
       {/* Full Page Sliding Player Overlay */}

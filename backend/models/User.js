@@ -43,7 +43,25 @@ const userSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Song'
       }
-    ]
+    ],
+    lastPlayback: {
+      songId: {
+        type: String,
+        default: null
+      },
+      currentTime: {
+        type: Number,
+        default: 0
+      },
+      wasPlaying: {
+        type: Boolean,
+        default: false
+      },
+      updatedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }
   },
   {
     timestamps: true
