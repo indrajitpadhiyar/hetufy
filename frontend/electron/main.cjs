@@ -16,9 +16,12 @@ const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const devServerUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
 
 function createWindow() {
-  const iconPath = process.platform === 'win32'
-    ? path.join(__dirname, 'resources/icon.ico')
-    : path.join(__dirname, 'resources/icon.png');
+  const customIcon = path.join(__dirname, '../public/idrmusic.png');
+  const iconPath = fs.existsSync(customIcon)
+    ? customIcon
+    : (process.platform === 'win32'
+        ? path.join(__dirname, 'resources/icon.ico')
+        : path.join(__dirname, 'resources/icon.png'));
 
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -26,7 +29,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 600,
     backgroundColor: '#000000',
-    title: 'Hetufy',
+    title: 'IDRMusic',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     show: false, // Show gracefully when ready-to-show
     autoHideMenuBar: true,
@@ -41,13 +44,31 @@ function createWindow() {
     }
   });
 
+  // Ensure standard Chrome User-Agent so Google OAuth does not block with disallowed_useragent
+  const customUserAgent = mainWindow.webContents.getUserAgent().replace(/Electron\/[0-9.]+\s/i, '');
+  mainWindow.webContents.setUserAgent(customUserAgent);
+
   // Graceful show on ready
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
 
-  // Security: Restrict new window creation & open external URLs in system browser
+  // Handle new window creation & allow Google OAuth popup
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.includes('accounts.google.com') || url.includes('google.com/o/oauth2')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          width: 500,
+          height: 650,
+          autoHideMenuBar: true,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true
+          }
+        }
+      };
+    }
     if (url.startsWith('https:') || url.startsWith('http:')) {
       shell.openExternal(url);
     }

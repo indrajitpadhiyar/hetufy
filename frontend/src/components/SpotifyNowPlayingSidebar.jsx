@@ -122,7 +122,7 @@ export default function SpotifyNowPlayingSidebar({
             </div>
           </div>
           <p className="text-xs text-zinc-400 line-clamp-3">
-            Genre: {currentSong.genre || 'Indie / Bollywood'}. Stream high resolution master tracks curated exclusively for Hetufy.
+            Genre: {currentSong.genre || 'Indie / Bollywood'}. Stream high resolution master tracks curated exclusively for IDRMusic.
           </p>
         </div>
 

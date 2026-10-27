@@ -7,6 +7,8 @@ import MusicPlayer from './components/MusicPlayer';
 import Toast from './components/Toast';
 import PlaylistModal from './components/PlaylistModal';
 import AddToPlaylistModal from './components/AddToPlaylistModal';
+import LoadingScreen from './components/LoadingScreen';
+import AuthScreen from './components/AuthScreen';
 import { songs, genres } from './data/songs';
 import { getSongsFromAPI, recordSongPlay, recordSongDownload, toggleLikeInBackend, seedBackendSongs } from './services/api';
 
@@ -24,6 +26,25 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+
+  // Initial App Loading Screen State
+  const [isLoadingApp, setIsLoadingApp] = useState(true);
+
+  // Authenticated User State
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('hetufy_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('hetufy_user');
+    localStorage.removeItem('hetufy_token');
+    setCurrentUser(null);
+  };
 
   // Theme State locked to Dark Theme
   const [theme, setTheme] = useState(() => {
@@ -238,6 +259,14 @@ export default function App() {
     }
   };
 
+  if (isLoadingApp) {
+    return <LoadingScreen onFinish={() => setIsLoadingApp(false)} />;
+  }
+
+  if (!currentUser) {
+    return <AuthScreen onLoginSuccess={(user) => setCurrentUser(user)} />;
+  }
+
   return (
     <div className="h-screen w-screen bg-black text-white flex flex-col overflow-hidden font-sans select-none">
       
@@ -250,6 +279,8 @@ export default function App() {
           setActiveCategory('All');
           setSearchQuery('');
         }}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* 2. Main 3-Column Workspace (Library Left, Main Center, Now Playing Right) */}

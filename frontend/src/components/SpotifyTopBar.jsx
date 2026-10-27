@@ -1,24 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Home, Search, Bell, Users, Folder, ChevronLeft, ChevronRight, 
-  MoreHorizontal 
+  MoreHorizontal, LogOut, User as UserIcon 
 } from 'lucide-react';
 
 export default function SpotifyTopBar({
   searchQuery,
   setSearchQuery,
   onOpenPlaylists,
-  onResetToHome
+  onResetToHome,
+  currentUser,
+  onLogout
 }) {
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   return (
     <header className="h-12 bg-black text-zinc-300 flex items-center justify-between px-3 select-none flex-shrink-0 z-30 border-b border-white/5">
-      {/* Left: Window Dots & Navigation Arrows */}
+      {/* Left: Brand Logo & Navigation Arrows */}
       <div className="flex items-center space-x-3 w-60">
-        <div 
-          className="text-zinc-400 p-1"
-          title="Hetufy"
-        >
-          <MoreHorizontal className="w-4 h-4" />
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center p-0.5 shadow-sm">
+            <img 
+              src="./idrmusic.png" 
+              alt="IDRMusic" 
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                if (!e.target.src.includes('/idrmusic.png')) {
+                  e.target.src = '/idrmusic.png';
+                }
+              }}
+            />
+          </div>
+          <span className="font-extrabold text-sm text-white tracking-tight hidden sm:inline-block">
+            IDRMusic
+          </span>
         </div>
 
         <div className="flex items-center space-x-1.5 ml-1">
@@ -90,14 +104,46 @@ export default function SpotifyTopBar({
           <Users className="w-4 h-4" />
         </button>
 
-        {/* Profile Avatar Badge */}
-        <div 
-          className="relative w-8 h-8 rounded-full bg-[#181818] border-2 border-white/80 overflow-hidden flex items-center justify-center shadow-sm"
-          title="User Profile"
-        >
-          <div className="w-full h-full bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-xs font-bold text-white">
-            🍎
-          </div>
+        {/* Profile Avatar Badge & Menu */}
+        <div className="relative">
+          <button 
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="relative w-8 h-8 rounded-full bg-[#181818] border-2 border-white/80 overflow-hidden flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shadow-sm"
+            title={currentUser?.name || "User Profile"}
+          >
+            {currentUser?.avatar ? (
+              <img src={currentUser.avatar} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-tr from-[#1ed760] to-emerald-700 flex items-center justify-center text-xs font-bold text-black uppercase">
+                {currentUser?.name ? currentUser.name[0] : 'U'}
+              </div>
+            )}
+          </button>
+
+          {/* Profile Dropdown Menu */}
+          {showProfileMenu && (
+            <div className="absolute right-0 mt-2 w-52 bg-[#1f1f23] border border-white/10 rounded-2xl p-2.5 shadow-2xl z-50 text-white animate-in fade-in zoom-in-95">
+              <div className="px-3 py-2 border-b border-white/10 mb-1">
+                <p className="text-xs font-bold truncate text-white">
+                  {currentUser?.name || 'IDRMusic Listener'}
+                </p>
+                <p className="text-[11px] text-zinc-400 truncate">
+                  {currentUser?.email || 'member@idrmusic.com'}
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  if (onLogout) onLogout();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-rose-400 hover:bg-white/10 hover:text-rose-300 rounded-xl transition-colors cursor-pointer font-medium"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log Out</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

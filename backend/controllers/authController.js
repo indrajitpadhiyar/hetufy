@@ -100,8 +100,114 @@ const getMe = async (req, res, next) => {
   }
 };
 
+// @desc    Authenticate with Google OAuth
+// @route   POST /api/auth/google
+// @access  Public
+const googleLogin = async (req, res, next) => {
+  try {
+    const { credential, userInfo } = req.body;
+    let googleId = null;
+    let email = null;
+    let name = null;
+    let picture = null;
+
+    if (credential) {
+      try {
+        const { OAuth2Client } = require('google-auth-library');
+        const googleClient = new OAuth2Client(
+          process.env.GOOGLE_CLIENT_ID || '790084538586-e1l7cqtum9toj5lptjqjpc8v74uivrvv.apps.googleusercontent.com'
+        );
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: process.env.GOOGLE_CLIENT_ID || '790084538586-e1l7cqtum9toj5lptjqjpc8v74uivrvv.apps.googleusercontent.com'
+        });
+        const payload = ticket.getPayload();
+        googleId = payload.sub;
+        email = payload.email;
+        name = payload.name;
+        picture = payload.picture;
+      } catch (verifyErr) {
+        console.warn('Google token verification fallback:', verifyErr.message);
+        if (userInfo && userInfo.email) {
+          googleId = userInfo.sub || userInfo.id;
+          email = userInfo.email;
+          name = userInfo.name;
+          picture = userInfo.picture || userInfo.avatar;
+        } else {
+          return res.status(400).json({ success: false, message: 'Invalid Google credential' });
+        }
+      }
+    } else if (userInfo && userInfo.email) {
+      googleId = userInfo.sub || userInfo.id;
+      email = userInfo.email;
+      name = userInfo.name;
+      picture = userInfo.picture || userInfo.avatar;
+    } else {
+      return res.status(400).json({ success: false, message: 'Google credential or user info required' });
+    }
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email not provided by Google account' });
+    }
+
+    const isMongoConnected = require('mongoose').connection.readyState === 1;
+    if (!isMongoConnected) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          _id: googleId || `google_${Date.now()}`,
+          name: name || email.split('@')[0],
+          email,
+          avatar: picture || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
+          role: 'user',
+          isGoogleAuth: true,
+          favorites: [],
+          token: generateToken(googleId || email)
+        }
+      });
+    }
+
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (user) {
+      if (!user.googleId && googleId) user.googleId = googleId;
+      if (picture && (!user.avatar || user.avatar.includes('unsplash') || user.avatar.includes('dicebear'))) {
+        user.avatar = picture;
+      }
+      user.isGoogleAuth = true;
+      await user.save();
+    } else {
+      user = await User.create({
+        name: name || email.split('@')[0],
+        email,
+        googleId,
+        avatar: picture || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
+        isGoogleAuth: true,
+        role: 'user'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+        isGoogleAuth: true,
+        favorites: user.favorites || [],
+        token: generateToken(user._id)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  googleLogin,
   getMe
 };

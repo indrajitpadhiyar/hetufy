@@ -1,8 +1,8 @@
 {
-  "name": "hetufy",
-  "productName": "Hetufy",
+  "name": "idrmusic",
+  "productName": "IDRMusic",
   "version": "1.0.0",
-  "description": "Hetufy - High-Fidelity Music Streaming & Download Desktop Player",
+  "description": "IDRMusic - High-Fidelity Music Streaming & Download Desktop Player",
   "author": "Indrajit Padhiyar",
   "private": true,
   "type": "module",
@@ -38,8 +38,8 @@
     "wait-on": "^9.5.1"
   },
   "build": {
-    "appId": "com.indrajitpadhiyar.hetufy",
-    "productName": "Hetufy",
+    "appId": "com.indrajitpadhiyar.idrmusic",
+    "productName": "IDRMusic",
     "copyright": "Copyright © 2026 Indrajit Padhiyar",
     "directories": {
       "output": "release"
@@ -65,7 +65,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
-      "shortcutName": "Hetufy",
+      "shortcutName": "IDRMusic",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     }
   }

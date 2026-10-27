@@ -24,11 +24,19 @@ export default function Navbar({
       }`}>
         
         {/* Brand Header */}
-        <div className="flex items-center gap-3">
-          <a href="#" className={`font-serif-editorial text-2xl md:text-3xl tracking-tight hover:opacity-80 transition-all font-normal ${
+        <div className="flex items-center gap-2.5">
+          <img 
+            src="./idrmusic.png" 
+            alt="IDRMusic" 
+            className="w-8 h-8 rounded-lg object-contain" 
+            onError={(e) => { 
+              if (!e.target.src.includes('/idrmusic.png')) e.target.src = '/idrmusic.png'; 
+            }} 
+          />
+          <a href="#" className={`font-serif-editorial text-2xl md:text-3xl tracking-tight hover:opacity-80 transition-all font-bold ${
             isDark ? 'text-white' : 'text-[#1c1b18]'
           }`}>
-            Mitter music
+            IDRMusic
           </a>
         </div>
 

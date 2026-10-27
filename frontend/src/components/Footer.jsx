@@ -9,15 +9,15 @@ export default function Footer({ theme = 'light' }) {
     }`}>
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-normal">
         <div>
-          <span className={`font-serif-editorial text-lg font-normal mr-2 ${
+          <span className={`font-serif-editorial text-lg font-bold mr-2 ${
             isDark ? 'text-white' : 'text-[#1c1b18]'
           }`}>
-            Mitter music
+            IDRMusic
           </span>
           <span>— Written to be sung</span>
         </div>
 
-        <p>© {new Date().getFullYear()} Mitter Music. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} IDRMusic. All rights reserved.</p>
       </div>
     </footer>
   );
