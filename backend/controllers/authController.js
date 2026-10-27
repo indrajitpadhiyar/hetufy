@@ -117,11 +117,11 @@ const googleLogin = async (req, res, next) => {
       try {
         const { OAuth2Client } = require('google-auth-library');
         const googleClient = new OAuth2Client(
-          process.env.GOOGLE_CLIENT_ID || '790084538586-e1l7cqtum9toj5lptjqjpc8v74uivrvv.apps.googleusercontent.com'
+          process.env.GOOGLE_CLIENT_ID || '790084538586-3o50je01gljgob517g7va3btu0588ls9.apps.googleusercontent.com'
         );
         const ticket = await googleClient.verifyIdToken({
           idToken: credential,
-          audience: process.env.GOOGLE_CLIENT_ID || '790084538586-e1l7cqtum9toj5lptjqjpc8v74uivrvv.apps.googleusercontent.com'
+          audience: process.env.GOOGLE_CLIENT_ID || '790084538586-3o50je01gljgob517g7va3btu0588ls9.apps.googleusercontent.com'
         });
         const payload = ticket.getPayload();
         googleId = payload.sub;

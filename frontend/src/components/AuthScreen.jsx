@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 import { loginUser, registerUser, loginWithGoogle } from '../services/api';
 
-const GOOGLE_CLIENT_ID = '790084538586-e1l7cqtum9toj5lptjqjpc8v74uivrvv.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '790084538586-3o50je01gljgob517g7va3btu0588ls9.apps.googleusercontent.com';
 
 // Helper to safely parse Google ID token payload
 function parseJwt(token) {
