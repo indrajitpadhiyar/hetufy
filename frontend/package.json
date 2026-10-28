@@ -59,16 +59,7 @@
         }
       ],
       "icon": "electron/resources/icon.ico",
-      "executableName": "IDRMusic",
-      "legalTrademarks": "IDRMusic",
-      "requestedExecutionLevel": "asInvoker",
-      "signtoolOptions": {
-        "publisherName": "Indrajit Padhiyar",
-        "rfc3161TimeStampServer": "http://timestamp.digicert.com",
-        "signingHashAlgorithms": [
-          "sha256"
-        ]
-      }
+      "executableName": "IDRMusic"
     },
     "nsis": {
       "oneClick": false,
@@ -76,9 +67,6 @@
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "IDRMusic",
-      "uninstallDisplayName": "${productName}",
-      "deleteAppDataOnUninstall": false,
-      "runAfterFinish": true,
       "artifactName": "${productName}-Setup-${version}.${ext}"
     }
   }

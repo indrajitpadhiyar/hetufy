@@ -191,6 +191,23 @@ ipcMain.on('open-external', (event, url) => {
 // Google OAuth for Desktop Handler (RFC 8252 Loopback Flow)
 ipcMain.handle('google-login', async () => {
   return new Promise((resolve) => {
+    // Validate required OAuth credentials before starting loopback
+    if (!DESKTOP_CLIENT_ID || typeof DESKTOP_CLIENT_ID !== 'string' || !DESKTOP_CLIENT_ID.trim()) {
+      console.error('[Google OAuth] Missing DESKTOP_CLIENT_ID');
+      return resolve({
+        success: false,
+        error: 'Google Desktop OAuth Client ID is missing. Please verify your environment configuration.'
+      });
+    }
+
+    if (!DESKTOP_CLIENT_SECRET || typeof DESKTOP_CLIENT_SECRET !== 'string' || !DESKTOP_CLIENT_SECRET.trim()) {
+      console.error('[Google OAuth] Missing DESKTOP_CLIENT_SECRET');
+      return resolve({
+        success: false,
+        error: 'Google Desktop OAuth Client Secret is missing. Please verify your environment configuration.'
+      });
+    }
+
     // Clean up any previously hanging auth server
     if (activeAuthServer) {
       try {

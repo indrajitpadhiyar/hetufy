@@ -319,6 +319,15 @@ export default function AuthScreen({ onLoginSuccess }) {
       return;
     }
 
+    // Web Browser OAuth Flow
+    if (!GOOGLE_CLIENT_ID) {
+      setLoading(false);
+      setErrorMessage('Google Client ID is not configured. Please check your .env configuration.');
+      return;
+    }
+
+    const redirectUri = encodeURIComponent(window.location.origin || 'http://localhost:5173');
+
     if (tokenClientRef.current) {
       // Prompt Google OAuth popup
       tokenClientRef.current.requestAccessToken({ prompt: 'select_account' });
@@ -327,13 +336,13 @@ export default function AuthScreen({ onLoginSuccess }) {
       window.google.accounts.id.prompt((notification) => {
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
           // Fallback to standard Google OAuth URL in popup
-          const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=http://localhost&response_type=token&scope=email%20profile`;
+          const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${redirectUri}&response_type=token&scope=email%20profile`;
           window.open(authUrl, '_blank', 'width=500,height=650');
         }
       });
     } else {
       // Fallback popup if external script was blocked by browser ad blocker
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=http://localhost&response_type=token&scope=email%20profile`;
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${redirectUri}&response_type=token&scope=email%20profile`;
       window.open(authUrl, '_blank', 'width=500,height=650');
     }
   };
