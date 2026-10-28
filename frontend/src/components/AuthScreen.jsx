@@ -287,10 +287,37 @@ export default function AuthScreen({ onLoginSuccess }) {
   };
 
   // Google Authentication Handler Trigger
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
     setErrorMessage('');
     setSuccessMessage('');
+
+    // Native Electron Desktop OAuth Flow (RFC 8252 Loopback)
+    if (window.electronAPI?.googleLogin) {
+      try {
+        const result = await window.electronAPI.googleLogin();
+        if (!result || !result.success) {
+          setLoading(false);
+          if (result?.error && !result.error.toLowerCase().includes('cancelled')) {
+            setErrorMessage(result.error);
+          }
+          return;
+        }
+
+        if (result.userInfo) {
+          await processGoogleLoginSuccess(result.userInfo, result.idToken);
+        } else if (result.idToken) {
+          await handleGoogleJwtCredential(result.idToken);
+        } else {
+          setLoading(false);
+          setErrorMessage('Could not retrieve Google profile data.');
+        }
+      } catch (err) {
+        setLoading(false);
+        setErrorMessage(err.message || 'Desktop Google sign-in failed');
+      }
+      return;
+    }
 
     if (tokenClientRef.current) {
       // Prompt Google OAuth popup

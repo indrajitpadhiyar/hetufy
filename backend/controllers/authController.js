@@ -116,12 +116,14 @@ const googleLogin = async (req, res, next) => {
     if (credential) {
       try {
         const { OAuth2Client } = require('google-auth-library');
-        const googleClient = new OAuth2Client(
-          process.env.GOOGLE_CLIENT_ID || '790084538586-3o50je01gljgob517g7va3btu0588ls9.apps.googleusercontent.com'
-        );
+        const webClientId = process.env.GOOGLE_CLIENT_ID;
+        const desktopClientId = process.env.GOOGLE_CLIENT_ID_DASKTOP || process.env.GOOGLE_CLIENT_ID_DESKTOP;
+        const audiences = [webClientId, desktopClientId].filter(Boolean);
+
+        const googleClient = new OAuth2Client(webClientId);
         const ticket = await googleClient.verifyIdToken({
           idToken: credential,
-          audience: process.env.GOOGLE_CLIENT_ID || '790084538586-3o50je01gljgob517g7va3btu0588ls9.apps.googleusercontent.com'
+          audience: audiences.length > 0 ? audiences : undefined
         });
         const payload = ticket.getPayload();
         googleId = payload.sub;

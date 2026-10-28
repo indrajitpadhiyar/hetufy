@@ -21,5 +21,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     if (typeof url === 'string' && (url.startsWith('https://') || url.startsWith('http://'))) {
       ipcRenderer.send('open-external', url);
     }
-  }
+  },
+
+  // Google OAuth for Desktop (Loopback RFC 8252 flow)
+  googleLogin: () => ipcRenderer.invoke('google-login')
 });
