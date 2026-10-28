@@ -14,9 +14,9 @@
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"npm run dev\" \"wait-on tcp:5173 && electron .\"",
     "electron:start": "electron .",
-    "electron:build": "npm run build && electron-builder --win nsis",
+    "electron:build": "npm run build && electron-builder --win",
     "package:win": "npm run build && electron-builder --win --dir",
-    "build:installer": "npm run build && electron-builder --win nsis"
+    "build:installer": "npm run build && electron-builder --win"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -58,14 +58,29 @@
           ]
         }
       ],
-      "icon": "electron/resources/icon.ico"
+      "icon": "electron/resources/icon.ico",
+      "executableName": "IDRMusic",
+      "legalTrademarks": "IDRMusic",
+      "requestedExecutionLevel": "asInvoker",
+      "signtoolOptions": {
+        "publisherName": "Indrajit Padhiyar",
+        "rfc3161TimeStampServer": "http://timestamp.digicert.com",
+        "signingHashAlgorithms": [
+          "sha256"
+        ]
+      }
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "IDRMusic",
+      "uninstallDisplayName": "${productName}",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
       "artifactName": "${productName}-Setup-${version}.${ext}"
     }
   }

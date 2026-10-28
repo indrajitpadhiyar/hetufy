@@ -414,6 +414,9 @@ ipcMain.handle('google-login', async () => {
 
 // App Lifecycle
 app.whenReady().then(() => {
+  if (process.platform === 'win32') {
+    app.setAppUserModelId('com.indrajitpadhiyar.idrmusic');
+  }
   createWindow();
 
   app.on('activate', () => {
