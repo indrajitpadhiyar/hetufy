@@ -52,12 +52,13 @@ const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const devServerUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
 
 function createWindow() {
-  const customIcon = path.join(__dirname, '../public/idrmusic.png');
-  const iconPath = fs.existsSync(customIcon)
-    ? customIcon
-    : (process.platform === 'win32'
-        ? path.join(__dirname, 'resources/icon.ico')
-        : path.join(__dirname, 'resources/icon.png'));
+  const iconCandidates = [
+    path.join(__dirname, 'resources/icon.ico'),
+    path.join(__dirname, '../dist/idrmusic.png'),
+    path.join(__dirname, '../public/idrmusic.png'),
+    path.join(__dirname, 'resources/icon.png')
+  ];
+  const iconPath = iconCandidates.find(p => fs.existsSync(p));
 
   mainWindow = new BrowserWindow({
     width: 1280,

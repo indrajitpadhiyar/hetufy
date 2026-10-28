@@ -56,10 +56,19 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "electron/resources/icon.ico",
       "executableName": "IDRMusic"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
