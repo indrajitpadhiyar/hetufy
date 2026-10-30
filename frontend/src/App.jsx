@@ -276,8 +276,27 @@ export default function App() {
   };
 
   const handleDeletePlaylist = (playlistId) => {
+    const target = playlists.find(pl => pl.id === playlistId);
+    if (target && activeCategory === `Playlist: ${target.name}`) {
+      setActiveCategory('All');
+    }
     setPlaylists(prev => prev.filter(pl => pl.id !== playlistId));
     triggerToast("Playlist Deleted", "Playlist removed", "info");
+  };
+
+  const handleEditPlaylist = (playlistId, newName) => {
+    if (!newName || !newName.trim()) return;
+    const trimmed = newName.trim();
+    setPlaylists(prev => prev.map(pl => {
+      if (pl.id === playlistId) {
+        if (activeCategory === `Playlist: ${pl.name}`) {
+          setActiveCategory(`Playlist: ${trimmed}`);
+        }
+        return { ...pl, name: trimmed };
+      }
+      return pl;
+    }));
+    triggerToast("Playlist Updated", `Renamed to "${trimmed}"`, "info");
   };
 
   // Audio Handlers
@@ -406,6 +425,8 @@ export default function App() {
         <SpotifyLibrarySidebar 
           playlists={playlists}
           onCreatePlaylist={handleCreatePlaylist}
+          onDeletePlaylist={handleDeletePlaylist}
+          onEditPlaylist={handleEditPlaylist}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
           favoritesCount={favorites.length}

@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bookmark, Plus, ArrowRight, Search, ListFilter, 
-  Heart, BookmarkCheck, Music2, Pin 
+  Heart, BookmarkCheck, Music2, Pin, MoreVertical,
+  Pencil, Trash2, X
 } from 'lucide-react';
 
 export default function SpotifyLibrarySidebar({
   playlists = [],
   onCreatePlaylist,
+  onDeletePlaylist,
+  onEditPlaylist,
   onSelectPlaylist,
   activeCategory,
   setActiveCategory,
@@ -17,6 +20,25 @@ export default function SpotifyLibrarySidebar({
   const [libraryFilter, setLibraryFilter] = useState('All'); // 'All' | 'Playlists' | 'Podcasts' | 'Artists'
   const [librarySearch, setLibrarySearch] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const [openMenuPlaylistId, setOpenMenuPlaylistId] = useState(null);
+  const [editingPlaylist, setEditingPlaylist] = useState(null);
+  const [editName, setEditName] = useState('');
+  const menuRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpenMenuPlaylistId(null);
+      }
+    };
+    if (openMenuPlaylistId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuPlaylistId]);
 
   // Extract unique artists from loaded songs
   const artists = Array.from(new Set(songs.map(s => s.artist))).slice(0, 6);
@@ -159,28 +181,85 @@ export default function SpotifyLibrarySidebar({
         {/* 3. User Playlists */}
         {(libraryFilter === 'All' || libraryFilter === 'Playlists') && playlists.map((pl, idx) => {
           const sampleSong = songs.find(s => pl.songIds?.includes(s.id));
+          const isMenuOpen = openMenuPlaylistId === pl.id;
+
           return (
             <div
               key={pl.id}
               onClick={() => setActiveCategory(`Playlist: ${pl.name}`)}
-              className={`flex items-center p-2 rounded-md hover:bg-[#1f1f1f] transition-colors cursor-pointer group ${
+              className={`relative flex items-center justify-between p-2 rounded-md hover:bg-[#1f1f1f] transition-colors cursor-pointer group ${
                 activeCategory === `Playlist: ${pl.name}` ? 'bg-[#232323]' : ''
               }`}
             >
-              <div className="w-12 h-12 rounded-md bg-[#282828] overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md">
-                {sampleSong?.cover ? (
-                  <img src={sampleSong.cover} alt={pl.name} className="w-full h-full object-cover" />
-                ) : (
-                  <Music2 className="w-5 h-5 text-zinc-500" />
-                )}
+              <div className="flex items-center min-w-0 flex-1">
+                <div className="w-12 h-12 rounded-md bg-[#282828] overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md">
+                  {sampleSong?.cover ? (
+                    <img src={sampleSong.cover} alt={pl.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Music2 className="w-5 h-5 text-zinc-500" />
+                  )}
+                </div>
+                <div className="ml-3 overflow-hidden flex-1">
+                  <h5 className="font-semibold text-sm text-white truncate group-hover:text-white">
+                    {pl.name}
+                  </h5>
+                  <p className="text-xs text-zinc-400 mt-0.5 truncate">
+                    Playlist • Indrajit
+                  </p>
+                </div>
               </div>
-              <div className="ml-3 overflow-hidden">
-                <h5 className="font-semibold text-sm text-white truncate group-hover:text-white">
-                  {pl.name}
-                </h5>
-                <p className="text-xs text-zinc-400 mt-0.5 truncate">
-                  Playlist • Indrajit
-                </p>
+
+              {/* 3-Dots More Options Button (Appears on hover) */}
+              <div className="relative ml-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenMenuPlaylistId(isMenuOpen ? null : pl.id);
+                  }}
+                  className={`p-1.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-all cursor-pointer ${
+                    isMenuOpen ? 'opacity-100 text-white bg-white/10' : 'opacity-0 group-hover:opacity-100'
+                  }`}
+                  title="More options"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isMenuOpen && (
+                  <div
+                    ref={menuRef}
+                    className="absolute right-0 top-8 z-50 w-44 bg-[#282828] border border-white/10 rounded-lg shadow-2xl py-1 text-xs text-zinc-200 backdrop-blur-md"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingPlaylist(pl);
+                        setEditName(pl.name);
+                        setOpenMenuPlaylistId(null);
+                      }}
+                      className="w-full px-3 py-2 flex items-center gap-2.5 hover:bg-white/10 hover:text-white text-left transition-colors cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Edit Playlist</span>
+                    </button>
+                    <div className="h-px bg-white/10 my-1" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpenMenuPlaylistId(null);
+                        if (onDeletePlaylist) {
+                          onDeletePlaylist(pl.id);
+                        }
+                      }}
+                      className="w-full px-3 py-2 flex items-center gap-2.5 hover:bg-red-500/20 text-red-400 hover:text-red-300 text-left transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove Playlist</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -215,6 +294,70 @@ export default function SpotifyLibrarySidebar({
         })}
 
       </div>
+
+      {/* Edit Playlist Modal */}
+      {editingPlaylist && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs"
+          onClick={() => setEditingPlaylist(null)}
+        >
+          <div 
+            className="relative w-full max-w-sm p-6 bg-[#181922] border border-white/10 text-white shadow-2xl rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+              <h3 className="font-bold text-base text-white">Edit Playlist</h3>
+              <button
+                type="button"
+                onClick={() => setEditingPlaylist(null)}
+                className="p-1 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (editName.trim() && onEditPlaylist) {
+                onEditPlaylist(editingPlaylist.id, editName.trim());
+              }
+              setEditingPlaylist(null);
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                    Playlist Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    autoFocus
+                    placeholder="Enter playlist name"
+                    className="w-full px-3 py-2 rounded-lg text-sm bg-[#121212] border border-white/15 text-white placeholder-zinc-500 focus:outline-none focus:border-white transition-colors"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingPlaylist(null)}
+                    className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!editName.trim()}
+                    className="px-4 py-2 rounded-lg text-xs font-bold bg-white text-black hover:scale-105 transition-all cursor-pointer disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </aside>
   );
