@@ -79,14 +79,12 @@ export default function SpotifyNowPlayingSidebar({
           </div>
 
           <button
-            onClick={() => onToggleFavorite(currentSong.id)}
+            onClick={() => onOpenAddToPlaylist(currentSong)}
             className="p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer flex-shrink-0"
-            title={isFavorite ? 'Remove from favorites' : 'Add to playlist / favorites'}
+            title="Add to playlist"
           >
-            <div className={`w-6 h-6 rounded-full border border-current flex items-center justify-center ${
-              isFavorite ? 'text-emerald-400 border-emerald-400 bg-emerald-400/20' : ''
-            }`}>
-              {isFavorite ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-4 h-4" />}
+            <div className="w-6 h-6 rounded-full border border-current flex items-center justify-center hover:border-emerald-400 hover:text-emerald-400">
+              <Plus className="w-4 h-4" />
             </div>
           </button>
         </div>
