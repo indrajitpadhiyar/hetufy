@@ -1,16 +1,41 @@
-# React + Vite
+# IDRMUSIC — Official Download Portal Website 🌐
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Modern, responsive, and animated download landing page for **IDRMUSIC** (Windows Desktop & Android).
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **3 Dynamic Themes**:
+  - 🌙 **Dark Studio**: Onyx & cyan/violet neon accents.
+  - ☀️ **Light Ivory**: Crisp studio white & indigo accents.
+  - 🌲 **Spotify Green**: Signature emerald & `#1ed760` audio accents.
+  - Theme is persisted in `localStorage`.
+- **Interactive App Mockups**:
+  - Desktop 3-column player preview with live play/pause & scrubber.
+  - Floating Android lockscreen & notification media player mockup.
+- **Direct Downloads**:
+  - Windows Setup Installer (`.exe`)
+  - Windows Portable Executable (`.exe`)
+  - Standalone Android APK (`.apk`)
+- **Keyframe Animations**: Pulsing sound equalizer waves, floating logo, glowing ambient backdrops.
+- **Interactive FAQ & System Requirements**.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- Vite 8
+- Tailwind CSS v4
+- Lucide React
 
-## Expanding the Oxlint configuration
+## 📦 Run Locally
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+npm install
+npm run dev
+```
+
+## 🏗️ Build for Production
+
+```bash
+npm run build
+npm run preview
+```

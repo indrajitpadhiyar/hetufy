@@ -1,16 +1,42 @@
-# React + Vite
+# IDRMUSIC — Web, Desktop & Android Client 🎵
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The core frontend client for IDRMUSIC, supporting Web, Windows Desktop (Electron), and Android Mobile (Capacitor).
 
-Currently, two official plugins are available:
+## 🚀 Supported Platforms
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **🌐 Web**: React 19 + Vite 8 + Tailwind CSS v4.
+- **🪟 Windows Desktop**: Electron 45 with NSIS installer and Portable single-file builds.
+- **📱 Android**: Capacitor 8 with native Android foreground audio service and lockscreen controls.
 
-## React Compiler
+## 📦 Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# Run web app in browser
+npm run dev
 
-## Expanding the Oxlint configuration
+# Run desktop app locally in Electron
+npm run electron:dev
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+# Build web production bundle
+npm run build
+
+# Build Windows desktop installer and portable .exe
+npm run build:installer
+
+# Sync web build to native Android project
+npm run android:build
+
+# Open native Android project in Android Studio
+npm run android:open
+```
+
+## 🛠️ Environment Configuration
+
+Create a `.env` file in `frontend/`:
+```ini
+VITE_API_BASE_URL=https://idrmusicbackend.onrender.com/api
+VITE_GOOGLE_CLIENT_ID=your_web_google_client_id.apps.googleusercontent.com
+VITE_GOOGLE_CLIENT_ID_DESKTOP=your_desktop_google_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_ID_DESKTOP=your_desktop_google_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET_DESKTOP=your_desktop_google_client_secret
+```
