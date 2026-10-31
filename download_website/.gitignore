@@ -23,8 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 
-# Large distribution binaries
+# Ignore files over 100MB for GitHub limits
 *.exe
-*.apk
-public/release/
+public/release/*.exe
 
+# Ensure Android APK (5MB) is included and deployed
+!public/release/IDRMusic.apk
+!public/downloads/**
+!public/*.apk

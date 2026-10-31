@@ -22,7 +22,11 @@ dist-ssr/
 build/
 release/
 **/dist/
-**/release/
+frontend/release/
+backend/release/
+!download_website/public/release/IDRMusic.apk
+!download_website/public/downloads/
+!download_website/public/*.apk
 
 # Logs
 logs/

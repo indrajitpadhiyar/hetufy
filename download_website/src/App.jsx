@@ -636,7 +636,7 @@ export default function App() {
             <div className="space-y-3 pt-4 border-t border-white/10">
               
               <a
-                href="/release/IDRMusic.apk"
+                href="/IDRMusic.apk"
                 download="IDRMusic.apk"
                 className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl text-sm font-extrabold transition-all hover:scale-[1.02] active:scale-[0.98] ${t.accentButton}`}
               >
