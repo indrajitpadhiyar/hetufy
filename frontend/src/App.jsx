@@ -10,6 +10,8 @@ import PlaylistModal from './components/PlaylistModal';
 import AddToPlaylistModal from './components/AddToPlaylistModal';
 import LoadingScreen from './components/LoadingScreen';
 import AuthScreen from './components/AuthScreen';
+import UpdateModal from './components/UpdateModal';
+import { checkForAppUpdate } from './config/version';
 import { songs, genres } from './data/songs';
 import { 
   getSongsFromAPI, 
@@ -42,11 +44,46 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('hetufy_user');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) return JSON.parse(saved);
+      // Auto-create listener session so app is NEVER blocked or blank on fresh launch
+      const defaultUser = {
+        name: 'IDR Listener',
+        email: 'listener@idrmusic.app',
+        avatar: '/idrmusic.png',
+        role: 'user',
+        token: `user_${Date.now()}`
+      };
+      localStorage.setItem('hetufy_user', JSON.stringify(defaultUser));
+      localStorage.setItem('hetufy_logged_in', 'true');
+      return defaultUser;
     } catch (e) {
-      return null;
+      return {
+        name: 'IDR Listener',
+        email: 'listener@idrmusic.app',
+        avatar: '/idrmusic.png',
+        role: 'user'
+      };
     }
   });
+
+  // App Update State
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Check for APK update shortly after startup
+    const checkTimer = setTimeout(async () => {
+      try {
+        const update = await checkForAppUpdate();
+        if (update && update.hasUpdate) {
+          setUpdateInfo(update);
+          setIsUpdateModalOpen(true);
+        }
+      } catch (err) {}
+    }, 2500);
+
+    return () => clearTimeout(checkTimer);
+  }, []);
 
   // Helper to read saved playback position for a specific user
   const getSavedPlayback = (user = currentUser) => {
@@ -450,13 +487,13 @@ export default function App() {
               } else if (activeCategory === 'Music' || activeCategory === 'All') {
                 matchesCategory = true;
               } else {
-                matchesCategory = s.genre?.toLowerCase() === activeCategory.toLowerCase();
+                matchesCategory = (s.genre || '').toLowerCase() === activeCategory.toLowerCase();
               }
 
-              const query = searchQuery.toLowerCase().trim();
+              const query = (searchQuery || '').toLowerCase().trim();
               const matchesSearch = !query || 
-                s.title.toLowerCase().includes(query) ||
-                s.artist.toLowerCase().includes(query);
+                (s.title || '').toLowerCase().includes(query) ||
+                (s.artist || '').toLowerCase().includes(query);
 
               return matchesCategory && matchesSearch;
             })}
@@ -769,6 +806,13 @@ export default function App() {
         theme={theme}
       />
 
+
+      {/* In-App Update Modal */}
+      <UpdateModal 
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        updateInfo={updateInfo}
+      />
 
       {/* Toast Notification */}
       <Toast toast={toast} />

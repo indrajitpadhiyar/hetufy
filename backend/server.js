@@ -59,8 +59,21 @@ app.get('/', (req, res) => {
       genres: '/api/songs/genres',
       seed: '/api/seed',
       auth: '/api/auth',
-      health: '/api/health'
+      health: '/api/health',
+      version: '/api/version'
     }
+  });
+});
+
+// App Version Check endpoint for Mobile APK update notifications
+app.get('/api/version', (req, res) => {
+  res.json({
+    success: true,
+    latestVersion: '1.0.1',
+    latestVersionCode: 2,
+    apkUrl: 'https://idrmusic.netlify.app/IDRMusic.apk',
+    releaseNotes: 'New Spotify Mobile layout, fast lag-free loader, updated launcher icon, and audio playback improvements.',
+    mandatory: false
   });
 });
 

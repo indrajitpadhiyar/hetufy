@@ -24,11 +24,15 @@ export default function SpotifyMainView({
   const remainingSongs = songs;
 
   // Chill section songs
-  const chillSongs = songs.filter(s => s.genre?.toLowerCase().includes('chill') || s.title.toLowerCase().includes('chill') || s.genre?.toLowerCase() === 'pop').slice(0, 8);
-  const displayChillSongs = chillSongs.length >= 2 ? chillSongs : songs.slice(0, 6);
+  const chillSongs = (songs || []).filter(s => 
+    (s?.genre || '').toLowerCase().includes('chill') || 
+    (s?.title || '').toLowerCase().includes('chill') || 
+    (s?.genre || '').toLowerCase() === 'pop'
+  ).slice(0, 8);
+  const displayChillSongs = chillSongs.length >= 2 ? chillSongs : (songs || []).slice(0, 6);
 
   // Recommendation section songs ("More like...")
-  const moreLikeSongs = songs.slice(2, 8);
+  const moreLikeSongs = (songs || []).slice(2, 8);
 
   // Filter chips: All, Music, Podcasts
   const baseFilters = ['All', 'Music', 'Podcasts'];
