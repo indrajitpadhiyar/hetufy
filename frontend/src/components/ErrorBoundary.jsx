@@ -22,9 +22,14 @@ export default class ErrorBoundary extends React.Component {
             <img src="/idrmusic.png" alt="IDRMusic" className="w-full h-full object-contain" />
           </div>
           <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
-          <p className="text-xs text-zinc-400 max-w-xs mb-6">
+          <p className="text-xs text-zinc-400 max-w-xs mb-4">
             The application encountered a small glitch. Tap below to reload your music library cleanly.
           </p>
+          {this.state.error && (
+            <p className="text-[10px] text-red-400/90 font-mono bg-red-950/40 border border-red-800/30 px-3 py-1.5 rounded-lg max-w-xs truncate mb-4">
+              {this.state.error.message || String(this.state.error)}
+            </p>
+          )}
           <button
             onClick={() => {
               localStorage.removeItem('hetufy_last_playback');

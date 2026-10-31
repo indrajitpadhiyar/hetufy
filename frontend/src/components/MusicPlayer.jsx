@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, 
   Repeat, Repeat1, Shuffle, Download, Heart, Maximize2, Disc,
-  Mic2, Laptop2, ListMusic
+  Mic2, Laptop2, ListMusic, Plus
 } from 'lucide-react';
 import FullPagePlayer from './FullPagePlayer';
 import DynamicIslandPlayer from './DynamicIslandPlayer';

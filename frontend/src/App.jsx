@@ -481,7 +481,7 @@ export default function App() {
               if (activeCategory.startsWith('Playlist: ')) {
                 const plName = activeCategory.replace('Playlist: ', '');
                 const targetPl = playlists.find(p => p.name === plName);
-                matchesCategory = targetPl ? targetPl.songIds.includes(s.id) : false;
+                matchesCategory = targetPl ? (targetPl.songIds || []).includes(s.id) : false;
               } else if (activeCategory === 'Favorites') {
                 matchesCategory = favorites.includes(s.id);
               } else if (activeCategory === 'Music' || activeCategory === 'All') {
@@ -570,7 +570,10 @@ export default function App() {
             ) : (
               <div className="space-y-1">
                 {songList
-                  .filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.artist.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .filter(s => 
+                    (s.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
+                    (s.artist || '').toLowerCase().includes((searchQuery || '').toLowerCase())
+                  )
                   .map((song) => (
                     <div
                       key={song.id}
@@ -644,7 +647,7 @@ export default function App() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-sm text-white truncate">{pl.name}</h4>
-                  <p className="text-xs text-neutral-400">Playlist • {pl.songIds.length} songs</p>
+                  <p className="text-xs text-neutral-400">Playlist • {(pl.songIds || []).length} songs</p>
                 </div>
               </div>
             ))}
