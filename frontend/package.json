@@ -16,9 +16,15 @@
     "electron:start": "electron .",
     "electron:build": "npm run build && electron-builder --win",
     "package:win": "npm run build && electron-builder --win --dir",
-    "build:installer": "npm run build && electron-builder --win"
+    "build:installer": "npm run build && electron-builder --win",
+    "android:build": "npm run build && cap sync android",
+    "android:open": "cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/status-bar": "^8.0.4",
     "@tailwindcss/vite": "^4.3.3",
     "framer-motion": "^13.1.0",
     "lucide-react": "^1.31.0",
@@ -27,6 +33,7 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
