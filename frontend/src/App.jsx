@@ -234,7 +234,7 @@ export default function App() {
                 triggerToast("Resumed Track", `Continuing "${matchedTrack.title}" from ${minutes}:${seconds}`, "info");
               }
             }
-          } else if (!currentSong) {
+          } else if (!currentSong || String(currentSong.id).startsWith('spot_')) {
             setCurrentSong(liveSongs[0]);
           }
         }

@@ -251,89 +251,65 @@ export default function MusicPlayer({
       <AnimatePresence>
         {!isFullPlayerOpen && !isIslandMode && (
           <>
-            {/* 1. MOBILE FLOATING MINI-PLAYER (Exact Match to Spotify Mobile Screenshot) */}
-            <motion.div
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 60, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+            {/* 1. MOBILE DOCKED BOTTOM AUDIO PLAYER BAR (Directly above Bottom Nav) */}
+            <div
               onClick={() => setIsFullPlayerOpen(true)}
-              className="md:hidden fixed bottom-[68px] left-2.5 right-2.5 z-40 bg-[#8c5620] rounded-xl shadow-2xl text-white overflow-hidden cursor-pointer select-none active:scale-[0.99] transition-transform"
+              className="md:hidden fixed bottom-14 left-0 right-0 z-40 h-14 bg-[#181818] border-t border-white/10 px-3 flex items-center justify-between text-white select-none cursor-pointer shadow-lg"
             >
-              {/* Top Banner Tag */}
-              <div className="text-[11px] font-medium text-amber-100/90 px-3 pt-2 pb-0.5 flex items-center justify-between">
-                <span>Recommended for you</span>
-              </div>
-
-              {/* Middle Row: Track info & Action buttons */}
-              <div className="px-3 pb-2 pt-0.5 flex items-center justify-between">
-                {/* Left: Thumbnail & Title/Artist */}
-                <div className="flex items-center min-w-0 flex-1 mr-2">
-                  <img
-                    src={currentSong.cover}
-                    alt={currentSong.title}
-                    className="w-10 h-10 rounded-md object-cover flex-shrink-0 shadow mr-2.5"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-sm font-bold text-white truncate leading-tight">
-                      {currentSong.title}
-                    </h4>
-                    <div className="flex items-center space-x-1.5 text-xs text-amber-100/85 truncate mt-0.5">
-                      <span className="w-2.5 h-2.5 bg-[#1ed760] rounded-[2px] inline-block flex-shrink-0" />
-                      <span className="truncate">{currentSong.artist}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Cast/Device, Add/Plus, Play/Pause */}
-                <div className="flex items-center space-x-2.5 text-white flex-shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleRightSidebar();
-                    }}
-                    className="p-1 text-amber-100/90 hover:text-white"
-                    title="Devices"
-                  >
-                    <Laptop2 className="w-5 h-5" />
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleFavorite(currentSong.id);
-                    }}
-                    className="p-1 text-amber-100/90 hover:text-white"
-                    title="Save to favorites"
-                  >
-                    <Plus className={`w-5 h-5 ${isFavorite ? 'text-[#1ed760]' : ''}`} />
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsPlaying(!isPlaying);
-                    }}
-                    className="p-1 text-white hover:scale-105 active:scale-95 transition-transform"
-                    title={isPlaying ? 'Pause' : 'Play'}
-                  >
-                    {isPlaying ? (
-                      <Pause className="w-6 h-6 fill-white" />
-                    ) : (
-                      <Play className="w-6 h-6 fill-white ml-0.5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Bottom Micro Progress Line */}
-              <div className="w-full h-[2.5px] bg-black/30">
+              {/* Progress Line on top of player bar */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/20">
                 <div
-                  className="h-full bg-white transition-all duration-150"
+                  className="h-full bg-[#1ed760] transition-all duration-150"
                   style={{ width: `${progressPercentage}%` }}
                 />
               </div>
-            </motion.div>
+
+              {/* Left: Thumbnail & Title/Artist */}
+              <div className="flex items-center min-w-0 flex-1 mr-2">
+                <img
+                  src={currentSong.cover}
+                  alt={currentSong.title}
+                  className="w-10 h-10 rounded object-cover flex-shrink-0 shadow mr-2.5 bg-zinc-800"
+                />
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xs sm:text-sm font-bold text-white truncate leading-tight">
+                    {currentSong.title}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                    {currentSong.artist}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Heart, Play/Pause */}
+              <div className="flex items-center space-x-2 text-white flex-shrink-0">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(currentSong.id);
+                  }}
+                  className="p-1.5 text-zinc-400 hover:text-white"
+                  title="Favorite"
+                >
+                  <Heart className={`w-5 h-5 ${isFavorite ? 'text-[#1ed760] fill-[#1ed760]' : ''}`} />
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsPlaying(!isPlaying);
+                  }}
+                  className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+                  title={isPlaying ? 'Pause' : 'Play'}
+                >
+                  {isPlaying ? (
+                    <Pause className="w-4 h-4 fill-black" />
+                  ) : (
+                    <Play className="w-4 h-4 fill-black ml-0.5" />
+                  )}
+                </button>
+              </div>
+            </div>
 
             {/* 2. SPOTIFY DESKTOP BOTTOM PLAYER BAR (md: and up) */}
             <motion.footer

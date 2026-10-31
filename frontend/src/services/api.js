@@ -23,7 +23,7 @@ export async function testBackendConnection() {
 }
 
 /**
- * Fetch all songs from Express / Render backend with fallback to local static library
+ * Fetch all songs from Express / Render backend
  */
 export async function getSongsFromAPI(genre = 'All', search = '') {
   let apiSongs = [];
@@ -33,7 +33,18 @@ export async function getSongsFromAPI(genre = 'All', search = '') {
 
   const queryString = params.toString() ? `?${params.toString()}` : '';
 
-  // Retry up to 2 times to handle Render free-tier cold starts smoothly
+  // Fast check: return cached backend songs immediately if available so UI never waits empty
+  try {
+    const cached = localStorage.getItem('hetufy_cached_backend_songs');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.length > 0 && !search && (!genre || genre === 'All')) {
+        apiSongs = parsed;
+      }
+    }
+  } catch (e) {}
+
+  // Fetch live from Render backend
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const response = await apiRequest(`/songs${queryString}`, { method: 'GET' }, 35000);
@@ -41,40 +52,51 @@ export async function getSongsFromAPI(genre = 'All', search = '') {
         const data = await response.json();
         if (data.success && data.data && data.data.length > 0) {
           apiSongs = data.data.map(transformSongFormat);
+          // Persist cached backend songs
+          try {
+            localStorage.setItem('hetufy_cached_backend_songs', JSON.stringify(apiSongs));
+          } catch (e) {}
           break;
         }
       }
     } catch (error) {
-      console.warn(`[API Client] Attempt ${attempt} backend fetch warning:`, error.message);
+      console.warn(`[API Client] Attempt ${attempt} backend fetch notice:`, error.message);
       if (attempt < 2) {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       }
     }
   }
 
+  if (apiSongs.length > 0) {
+    let filtered = apiSongs;
+    if (genre && genre !== 'All') {
+      filtered = filtered.filter(s => (s.genre || '').toLowerCase() === genre.toLowerCase());
+    }
+    if (search) {
+      const query = search.toLowerCase();
+      filtered = filtered.filter(s =>
+        (s.title || '').toLowerCase().includes(query) ||
+        (s.artist || '').toLowerCase().includes(query) ||
+        (s.genre || '').toLowerCase().includes(query)
+      );
+    }
+    return filtered;
+  }
+
   let localSongs = loadSongs();
   if (genre && genre !== 'All') {
-    localSongs = localSongs.filter(s => s.genre.toLowerCase() === genre.toLowerCase());
+    localSongs = localSongs.filter(s => (s.genre || '').toLowerCase() === genre.toLowerCase());
   }
   if (search) {
     const query = search.toLowerCase();
     localSongs = localSongs.filter(s =>
-      s.title.toLowerCase().includes(query) ||
-      s.artist.toLowerCase().includes(query) ||
-      s.genre.toLowerCase().includes(query)
+      (s.title || '').toLowerCase().includes(query) ||
+      (s.artist || '').toLowerCase().includes(query) ||
+      (s.genre || '').toLowerCase().includes(query)
     );
   }
 
-  const combined = [...apiSongs, ...localSongs];
-  const uniqueMap = new Map();
-  combined.forEach((s, idx) => {
-    const key = s.id || s.title;
-    if (!uniqueMap.has(key)) {
-      uniqueMap.set(key, { ...s, id: s.id || `track_${idx}` });
-    }
-  });
-
-  return Array.from(uniqueMap.values());
+  return localSongs;
 }
 
 /**
