@@ -11,7 +11,7 @@ export default function SpotifyNowPlayingSidebar({
   if (!currentSong) return null;
 
   return (
-    <aside className="w-72 lg:w-80 h-full bg-[#121212] rounded-lg flex flex-col overflow-hidden text-white select-none flex-shrink-0 border border-white/5 shadow-xl">
+    <aside className="hidden md:flex w-72 lg:w-80 h-full bg-[#121212] rounded-lg flex-col overflow-hidden text-white select-none flex-shrink-0 border border-white/5 shadow-xl">
       
       {/* Top Header: Track Title & Close Button */}
       <div className="p-4 pb-2 flex items-center justify-between">

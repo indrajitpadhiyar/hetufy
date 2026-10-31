@@ -23,11 +23,182 @@ function formatCleanTitle(rawName) {
     .replace(/\b\w/g, l => l.toUpperCase());
 }
 
+const DEFAULT_SEED_SONGS = [
+  {
+    id: 'spot_1',
+    title: 'Rehbara',
+    artist: 'Bhuvan Bam, Rekha Bhardwaj',
+    album: 'Taaza Khabar',
+    genre: 'Bollywood',
+    duration: 215,
+    cover: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612088_5674468-lq.mp3',
+    featured: true,
+    downloads: '1.2M DLs',
+    releaseYear: '2026',
+    accentColor: '#8b5cf6'
+  },
+  {
+    id: 'spot_2',
+    title: 'chaandni (With Abhijay Sharma)',
+    artist: 'Abhijay Sharma',
+    album: 'Chaandni Single',
+    genre: 'Pop',
+    duration: 184,
+    cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612089_5674468-lq.mp3',
+    featured: true,
+    downloads: '980K DLs',
+    releaseYear: '2026',
+    accentColor: '#ec4899'
+  },
+  {
+    id: 'spot_3',
+    title: 'TRENDING INSTA FUNK 😈🔥',
+    artist: 'DJ Funk, Viral Beats',
+    album: 'Night Funk Vol. 1',
+    genre: 'Funk',
+    duration: 160,
+    cover: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612090_5674468-lq.mp3',
+    featured: true,
+    downloads: '2.4M DLs',
+    releaseYear: '2026',
+    accentColor: '#06b6d4'
+  },
+  {
+    id: 'spot_4',
+    title: 'Bollywood & Chill',
+    artist: 'Pritam, Arijit Singh',
+    album: 'Acoustic Bollywood',
+    genre: 'Chill',
+    duration: 242,
+    cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612091_5674468-lq.mp3',
+    featured: true,
+    downloads: '3.1M DLs',
+    releaseYear: '2026',
+    accentColor: '#f97316'
+  },
+  {
+    id: 'spot_5',
+    title: 'Navratri special ✨🔥 | Garba 2026',
+    artist: 'Kinjal Dave, Kirtidan Gadhvi',
+    album: 'Nonstop Garba Hits',
+    genre: 'Garba',
+    duration: 295,
+    cover: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612088_5674468-lq.mp3',
+    featured: true,
+    downloads: '4.5M DLs',
+    releaseYear: '2026',
+    accentColor: '#10b981'
+  },
+  {
+    id: 'spot_6',
+    title: 'Ma meldi na dakla',
+    artist: 'Pravin Luni',
+    album: 'Maha Dakla',
+    genre: 'Folk',
+    duration: 210,
+    cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612089_5674468-lq.mp3',
+    featured: true,
+    downloads: '850K DLs',
+    releaseYear: '2026',
+    accentColor: '#f43f5e'
+  },
+  {
+    id: 'spot_7',
+    title: 'Rimjhim Meri',
+    artist: 'Darshan Raval',
+    album: 'Monsoon Diary',
+    genre: 'Monsoon Chill',
+    duration: 198,
+    cover: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612090_5674468-lq.mp3',
+    featured: true,
+    downloads: '1.9M DLs',
+    releaseYear: '2026',
+    accentColor: '#3b82f6'
+  },
+  {
+    id: 'spot_8',
+    title: 'Tum Mere Ho',
+    artist: 'Jubin Nautiyal',
+    album: 'Pure Romance',
+    genre: 'Romantic',
+    duration: 226,
+    cover: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612091_5674468-lq.mp3',
+    featured: true,
+    downloads: '2.1M DLs',
+    releaseYear: '2026',
+    accentColor: '#a855f7'
+  },
+  {
+    id: 'spot_9',
+    title: 'Zulfe',
+    artist: 'Saahel, Trosk',
+    album: 'Midnight Melodies',
+    genre: 'Chill',
+    duration: 188,
+    cover: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612088_5674468-lq.mp3',
+    featured: true,
+    downloads: '1.7M DLs',
+    releaseYear: '2026',
+    accentColor: '#8c5620'
+  },
+  {
+    id: 'spot_10',
+    title: 'Chill Karlo',
+    artist: 'Karan Aujla, Yo Yo Honey Singh, Diljit Dosanjh',
+    album: 'Weekend Vibe',
+    genre: 'Chill',
+    duration: 204,
+    cover: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612089_5674468-lq.mp3',
+    featured: true,
+    downloads: '3.6M DLs',
+    releaseYear: '2026',
+    accentColor: '#06b6d4'
+  },
+  {
+    id: 'spot_11',
+    title: 'Feel Good Telugu',
+    artist: 'Anirudh Ravichander, Sid Sriram, G. V. Prakash',
+    album: 'Coastal Melodies',
+    genre: 'Chill',
+    duration: 230,
+    cover: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612090_5674468-lq.mp3',
+    featured: true,
+    downloads: '2.8M DLs',
+    releaseYear: '2026',
+    accentColor: '#10b981'
+  },
+  {
+    id: 'spot_12',
+    title: 'Trending Valentine\'s',
+    artist: 'Arijit Singh, Shreya Ghoshal',
+    album: 'Heartstrings',
+    genre: 'Romantic',
+    duration: 245,
+    cover: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&auto=format&fit=crop&q=80',
+    audio: 'https://cdn.freesound.org/previews/612/612091_5674468-lq.mp3',
+    featured: true,
+    downloads: '1.4M DLs',
+    releaseYear: '2026',
+    accentColor: '#ec4899'
+  }
+];
+
 export function loadSongs() {
   const filePaths = Object.keys(audioFiles);
   
   if (filePaths.length === 0) {
-    return [];
+    return DEFAULT_SEED_SONGS;
   }
 
   return filePaths.map((filePath, index) => {

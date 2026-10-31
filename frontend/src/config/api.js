@@ -32,11 +32,19 @@ export function getApiBaseUrl() {
     typeof window !== "undefined" && 
     (Boolean(window.electronAPI?.isElectron) || window.location?.protocol === 'file:');
 
+  const isMobileApp = 
+    typeof window !== "undefined" && 
+    (Boolean(window.Capacitor?.isNativePlatform?.()) || 
+     window.location?.protocol === 'capacitor:' || 
+     (window.location?.hostname === 'localhost' && /Android|iPhone|iPad/i.test(navigator.userAgent)));
+
+  const isPackagedOrMobile = isElectron || isMobileApp;
+
   if (typeof window !== "undefined") {
     const savedUrl = localStorage.getItem("hetufy_api_base_url");
     if (savedUrl && savedUrl.trim()) {
-      // Clear stale localhost in packaged desktop app
-      if (isElectron && savedUrl.includes("localhost")) {
+      // Clear stale localhost in packaged desktop or mobile app
+      if (isPackagedOrMobile && savedUrl.includes("localhost")) {
         localStorage.removeItem("hetufy_api_base_url");
       } else {
         return normalizeApiUrl(savedUrl);
@@ -45,14 +53,14 @@ export function getApiBaseUrl() {
   }
 
   if (import.meta.env.VITE_API_BASE_URL) {
-    if (isElectron && import.meta.env.VITE_API_BASE_URL.includes("localhost")) {
+    if (isPackagedOrMobile && import.meta.env.VITE_API_BASE_URL.includes("localhost")) {
       return normalizeApiUrl(DEFAULT_PROD_API);
     }
     return normalizeApiUrl(import.meta.env.VITE_API_BASE_URL);
   }
 
-  // Desktop apps or production builds connect to hosted Render API
-  if (isElectron || !import.meta.env.DEV) {
+  // Desktop apps, mobile APKs, or production builds connect to hosted Render API
+  if (isPackagedOrMobile || !import.meta.env.DEV) {
     return normalizeApiUrl(DEFAULT_PROD_API);
   }
 

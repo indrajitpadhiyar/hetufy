@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Home, Search, Library, Radio, Plus, Heart, Sparkles, Music2, Bookmark, FolderPlus } from 'lucide-react';
 import SpotifyTopBar from './components/SpotifyTopBar';
 import SpotifyLibrarySidebar from './components/SpotifyLibrarySidebar';
 import SpotifyMainView from './components/SpotifyMainView';
@@ -32,6 +33,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+  const [mobileTab, setMobileTab] = useState('home');
 
   // Initial App Loading Screen State
   const [isLoadingApp, setIsLoadingApp] = useState(true);
@@ -418,10 +420,10 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* 2. Main 3-Column Workspace (Library Left, Main Center, Now Playing Right) */}
-      <div className="flex-1 flex overflow-hidden p-2 gap-2 min-h-0 mb-[76px]">
+      {/* 2. Main Content Workspace (Desktop 3-Column or Mobile Screen) */}
+      <div className="flex-1 flex overflow-hidden p-0 sm:p-2 gap-2 min-h-0 mb-0 md:mb-[76px]">
         
-        {/* Left Column: Your Library */}
+        {/* Left Column: Your Library (Desktop md: and up) */}
         <SpotifyLibrarySidebar 
           playlists={playlists}
           onCreatePlaylist={handleCreatePlaylist}
@@ -434,45 +436,226 @@ export default function App() {
           onPlaySong={handlePlaySong}
         />
 
-        {/* Center Column: Main Content Area */}
-        <SpotifyMainView 
-          songs={songList.filter(s => {
-            let matchesCategory = false;
-            if (activeCategory.startsWith('Playlist: ')) {
-              const plName = activeCategory.replace('Playlist: ', '');
-              const targetPl = playlists.find(p => p.name === plName);
-              matchesCategory = targetPl ? targetPl.songIds.includes(s.id) : false;
-            } else if (activeCategory === 'Favorites') {
-              matchesCategory = favorites.includes(s.id);
-            } else if (activeCategory === 'Music' || activeCategory === 'All') {
-              matchesCategory = true;
-            } else {
-              matchesCategory = s.genre?.toLowerCase() === activeCategory.toLowerCase();
-            }
+        {/* Center Main View or Mobile Selected Tab */}
+        {mobileTab === 'home' && (
+          <SpotifyMainView 
+            songs={songList.filter(s => {
+              let matchesCategory = false;
+              if (activeCategory.startsWith('Playlist: ')) {
+                const plName = activeCategory.replace('Playlist: ', '');
+                const targetPl = playlists.find(p => p.name === plName);
+                matchesCategory = targetPl ? targetPl.songIds.includes(s.id) : false;
+              } else if (activeCategory === 'Favorites') {
+                matchesCategory = favorites.includes(s.id);
+              } else if (activeCategory === 'Music' || activeCategory === 'All') {
+                matchesCategory = true;
+              } else {
+                matchesCategory = s.genre?.toLowerCase() === activeCategory.toLowerCase();
+              }
 
-            const query = searchQuery.toLowerCase().trim();
-            const matchesSearch = !query || 
-              s.title.toLowerCase().includes(query) ||
-              s.artist.toLowerCase().includes(query);
+              const query = searchQuery.toLowerCase().trim();
+              const matchesSearch = !query || 
+                s.title.toLowerCase().includes(query) ||
+                s.artist.toLowerCase().includes(query);
 
-            return matchesCategory && matchesSearch;
-          })}
-          currentSong={currentSong}
-          isPlaying={isPlaying}
-          onPlaySong={handlePlaySong}
-          onTogglePlay={handleTogglePlay}
-          onDownload={handleDownload}
-          favorites={favorites}
-          onToggleFavorite={handleToggleFavorite}
-          onOpenAddToPlaylist={(song) => setSongForAddToPlaylist(song)}
-          activeCategory={activeCategory}
-          onSelectCategory={setActiveCategory}
-          categories={genres}
-          isLoading={isLoadingSongs}
-          onRetry={loadData}
-        />
+              return matchesCategory && matchesSearch;
+            })}
+            currentSong={currentSong}
+            isPlaying={isPlaying}
+            onPlaySong={handlePlaySong}
+            onTogglePlay={handleTogglePlay}
+            onDownload={handleDownload}
+            favorites={favorites}
+            onToggleFavorite={handleToggleFavorite}
+            onOpenAddToPlaylist={(song) => setSongForAddToPlaylist(song)}
+            activeCategory={activeCategory}
+            onSelectCategory={setActiveCategory}
+            categories={genres}
+            isLoading={isLoadingSongs}
+            onRetry={loadData}
+            currentUser={currentUser}
+          />
+        )}
 
-        {/* Right Column: Now Playing View (Toggleable) */}
+        {/* Mobile Search Tab */}
+        {mobileTab === 'search' && (
+          <div className="md:hidden flex-1 h-full bg-[#121212] overflow-y-auto p-4 pb-36 text-white custom-scrollbar">
+            <div className="flex items-center space-x-2.5 mb-4">
+              <div className="w-8 h-8 rounded-full bg-[#242424] overflow-hidden flex-shrink-0 border border-white/10 flex items-center justify-center">
+                {currentUser?.avatar ? (
+                  <img src={currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <img src="/idrmusic.png" alt="IDR" className="w-6 h-6 object-contain" />
+                )}
+              </div>
+              <h2 className="text-2xl font-bold text-white">Search</h2>
+            </div>
+
+            <div className="relative mb-5">
+              <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <input
+                type="text"
+                placeholder="What do you want to listen to?"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-[#242424] hover:bg-[#2a2a2a] focus:bg-[#282828] border border-white/10 rounded-lg text-sm text-white placeholder-neutral-400 outline-none focus:border-white/30"
+              />
+            </div>
+
+            {!searchQuery ? (
+              <div>
+                <h3 className="font-bold text-base text-white mb-3">Browse all</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { title: 'Bollywood', bg: 'from-amber-600 to-orange-700' },
+                    { title: 'Chill', bg: 'from-cyan-600 to-blue-700' },
+                    { title: 'Pop', bg: 'from-pink-600 to-rose-700' },
+                    { title: 'Punjabi', bg: 'from-emerald-600 to-teal-800' },
+                    { title: 'Funk', bg: 'from-purple-600 to-indigo-800' },
+                    { title: 'Folk', bg: 'from-yellow-600 to-amber-800' },
+                    { title: 'Garba', bg: 'from-red-600 to-pink-800' },
+                    { title: 'Romantic', bg: 'from-fuchsia-600 to-purple-800' }
+                  ].map((item) => (
+                    <div
+                      key={item.title}
+                      onClick={() => {
+                        setActiveCategory(item.title);
+                        setMobileTab('home');
+                      }}
+                      className={`h-24 rounded-lg bg-gradient-to-br ${item.bg} p-3 font-bold text-white text-base relative overflow-hidden cursor-pointer shadow-md`}
+                    >
+                      <span>{item.title}</span>
+                      <div className="absolute -bottom-2 -right-2 w-14 h-14 bg-white/10 rounded-full blur-xs" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {songList
+                  .filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.artist.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .map((song) => (
+                    <div
+                      key={song.id}
+                      onClick={() => handlePlaySong(song)}
+                      className="flex items-center space-x-3 p-2 rounded-md hover:bg-neutral-800/80 cursor-pointer"
+                    >
+                      <img src={song.cover} alt={song.title} className="w-11 h-11 rounded object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-white truncate">{song.title}</h4>
+                        <p className="text-xs text-neutral-400 truncate">{song.artist}</p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mobile Library Tab */}
+        {mobileTab === 'library' && (
+          <div className="md:hidden flex-1 h-full bg-[#121212] overflow-y-auto p-4 pb-36 text-white custom-scrollbar">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-[#242424] overflow-hidden flex-shrink-0 border border-white/10 flex items-center justify-center">
+                  {currentUser?.avatar ? (
+                    <img src={currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <img src="/idrmusic.png" alt="IDR" className="w-6 h-6 object-contain" />
+                  )}
+                </div>
+                <h2 className="text-2xl font-bold text-white">Your Library</h2>
+              </div>
+              <button
+                onClick={() => setIsPlaylistModalOpen(true)}
+                className="p-2 text-neutral-300 hover:text-white"
+                title="Create playlist"
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Pinned Liked Songs */}
+            <div 
+              onClick={() => {
+                setActiveCategory('Favorites');
+                setMobileTab('home');
+              }}
+              className="flex items-center space-x-3 p-2.5 rounded-lg hover:bg-neutral-800/60 cursor-pointer mb-2"
+            >
+              <div className="w-12 h-12 rounded bg-gradient-to-br from-indigo-600 to-blue-400 flex items-center justify-center shadow">
+                <Heart className="w-6 h-6 fill-white text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-sm text-white">Liked Songs</h4>
+                <p className="text-xs text-neutral-400">Playlist • {favorites.length} songs</p>
+              </div>
+            </div>
+
+            {/* User Playlists */}
+            {playlists.map((pl) => (
+              <div
+                key={pl.id}
+                onClick={() => {
+                  setActiveCategory(`Playlist: ${pl.name}`);
+                  setMobileTab('home');
+                }}
+                className="flex items-center space-x-3 p-2.5 rounded-lg hover:bg-neutral-800/60 cursor-pointer mb-2"
+              >
+                <div className="w-12 h-12 rounded bg-neutral-800 flex items-center justify-center shadow border border-white/5">
+                  <Bookmark className="w-6 h-6 text-neutral-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-sm text-white truncate">{pl.name}</h4>
+                  <p className="text-xs text-neutral-400">Playlist • {pl.songIds.length} songs</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Mobile Favorites / Premium Tab */}
+        {mobileTab === 'favorites' && (
+          <div className="md:hidden flex-1 h-full bg-[#121212] overflow-y-auto p-4 pb-36 text-white custom-scrollbar">
+            <div className="flex items-center space-x-4 mb-6 pt-2">
+              <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-xl flex-shrink-0">
+                <Heart className="w-10 h-10 fill-white text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-neutral-400 uppercase font-semibold">Playlist</p>
+                <h2 className="text-2xl font-bold text-white">Liked Songs</h2>
+                <p className="text-xs text-neutral-400 mt-1">{favorites.length} saved tracks</p>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              {songList.filter(s => favorites.includes(s.id)).map((song) => (
+                <div
+                  key={song.id}
+                  onClick={() => handlePlaySong(song)}
+                  className="flex items-center space-x-3 p-2 rounded-md hover:bg-neutral-800 cursor-pointer"
+                >
+                  <img src={song.cover} alt={song.title} className="w-11 h-11 rounded object-cover" />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-white truncate">{song.title}</h4>
+                    <p className="text-xs text-neutral-400 truncate">{song.artist}</p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleFavorite(song.id);
+                    }}
+                    className="p-2 text-[#1ed760]"
+                  >
+                    <Heart className="w-5 h-5 fill-current" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Right Column: Now Playing View (Desktop Only) */}
         {isRightSidebarOpen && currentSong && (
           <SpotifyNowPlayingSidebar 
             currentSong={currentSong}
@@ -485,7 +668,7 @@ export default function App() {
 
       </div>
 
-      {/* 3. Persistent Spotify Bottom Audio Player Bar & Full Page View */}
+      {/* 3. Persistent Spotify Audio Player (Floating Mini-Player on Mobile, Footer on Desktop) */}
       {currentSong && (
         <MusicPlayer 
           currentSong={currentSong}
@@ -507,6 +690,57 @@ export default function App() {
           onSavePlayback={handleSavePlayback}
         />
       )}
+
+      {/* 4. MOBILE 5-TAB BOTTOM NAVIGATION BAR (Exact Spotify Mobile UI) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[60px] bg-[#121212]/95 backdrop-blur-md border-t border-white/5 z-50 flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom)] select-none">
+        <button
+          onClick={() => setMobileTab('home')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 cursor-pointer transition-colors ${
+            mobileTab === 'home' ? 'text-white font-bold' : 'text-neutral-400 hover:text-white'
+          }`}
+        >
+          <Home className={`w-5 h-5 mb-0.5 ${mobileTab === 'home' ? 'stroke-[2.5]' : 'stroke-2'}`} />
+          <span className="text-[10px]">Home</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab('search')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 cursor-pointer transition-colors ${
+            mobileTab === 'search' ? 'text-white font-bold' : 'text-neutral-400 hover:text-white'
+          }`}
+        >
+          <Search className={`w-5 h-5 mb-0.5 ${mobileTab === 'search' ? 'stroke-[2.5]' : 'stroke-2'}`} />
+          <span className="text-[10px]">Search</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab('library')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 cursor-pointer transition-colors ${
+            mobileTab === 'library' ? 'text-white font-bold' : 'text-neutral-400 hover:text-white'
+          }`}
+        >
+          <Library className={`w-5 h-5 mb-0.5 ${mobileTab === 'library' ? 'stroke-[2.5]' : 'stroke-2'}`} />
+          <span className="text-[10px]">Your Library</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab('favorites')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 cursor-pointer transition-colors ${
+            mobileTab === 'favorites' ? 'text-white font-bold' : 'text-neutral-400 hover:text-white'
+          }`}
+        >
+          <Radio className={`w-5 h-5 mb-0.5 ${mobileTab === 'favorites' ? 'stroke-[2.5]' : 'stroke-2'}`} />
+          <span className="text-[10px]">Premium</span>
+        </button>
+
+        <button
+          onClick={() => setIsPlaylistModalOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-neutral-400 hover:text-white cursor-pointer transition-colors"
+        >
+          <Plus className="w-5 h-5 mb-0.5 stroke-2" />
+          <span className="text-[10px]">Create</span>
+        </button>
+      </nav>
 
       {/* Playlist Manager Modal */}
       <PlaylistModal 

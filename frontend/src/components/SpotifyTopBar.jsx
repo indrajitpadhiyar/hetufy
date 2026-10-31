@@ -14,7 +14,7 @@ export default function SpotifyTopBar({
 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   return (
-    <header className="h-12 bg-black text-zinc-300 flex items-center justify-between px-3 select-none flex-shrink-0 z-30 border-b border-white/5">
+    <header className="hidden md:flex h-12 bg-black text-zinc-300 items-center justify-between px-3 select-none flex-shrink-0 z-30 border-b border-white/5">
       {/* Left: Brand Logo & Navigation Arrows */}
       <div className="flex items-center space-x-3 w-60">
         <div className="flex items-center gap-2">

@@ -13,6 +13,11 @@ public class MainActivity extends BridgeActivity {
             webSettings.setMediaPlaybackRequiresUserGesture(false);
             webSettings.setDomStorageEnabled(true);
             webSettings.setDatabaseEnabled(true);
+            webSettings.setJavaScriptEnabled(true);
+            String ua = webSettings.getUserAgentString();
+            if (ua != null && ua.contains("; wv")) {
+                webSettings.setUserAgentString(ua.replace("; wv", ""));
+            }
         }
     }
 }
